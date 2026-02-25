@@ -1,5 +1,5 @@
-import { getFirestore, doc, setDoc } from "firebase/firestore";
-import { FIREBASE_AUTH } from "@/FirebaseConfig";
+import Constants from "expo-constants";
+import { supabase } from "@/SupabaseConfig";
 
 // Determine if a person is in motion based on accelerometer and gyroscope data
 const determineMotionState = (
@@ -32,74 +32,80 @@ const formatDate = (dateString: string) => {
   return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
 };
 
-// This function starts collecting sensor data and updating Firestore
-// It returns a cleanup function that can be called to stop the data collection
+// This function starts collecting sensor data and updating Supabase
 export const startSensorDataCollection = () => {
   console.log("🔄 Starting sensor data collection service...");
-  
+
   let lastUpdateTime = Date.now();
   let isActive = true;
   let wsConnection: WebSocket | null = null;
-  
+
   // Function to connect to the WebSocket server
   const connectWebSocket = () => {
     if (!isActive) return;
-    
+
     try {
-      wsConnection = new WebSocket("ws://192.168.1.3:3000");
-      
+      // Dynamically determine the dev machine IP
+      // @ts-ignore
+      const debuggerHost = Constants.expoConfig?.hostUri || Constants.experienceUrl || Constants.manifest2?.extra?.expoClient?.hostUri || Constants.manifest?.debuggerHost;
+      const devIP = debuggerHost?.split(":")[0] || "192.168.1.44"; // Fallback to current IP if needed
+
+      console.log(`📡 Connecting to sensor server at ws://${devIP}:3000`);
+      wsConnection = new WebSocket(`ws://${devIP}:3000`);
+
       wsConnection.onopen = () => {
         console.log("✅ Connected to WebSocket Server");
       };
-      
+
       wsConnection.onmessage = async (event) => {
         if (!isActive) return;
-        
+
         try {
           const data = JSON.parse(event.data);
-          
-          // Check if we have all the required sensor data
+
           if (data.gyroscope && data.accelerometer && data.pulseoximeter) {
-            // Only update Firestore every 2 seconds
             const currentTime = Date.now();
             if (currentTime - lastUpdateTime > 2000) {
               lastUpdateTime = currentTime;
-              
-              const currentUser = FIREBASE_AUTH.currentUser;
-              if (currentUser && currentUser.email) {
-                const db = getFirestore();
-                const userHealthDocRef = doc(db, "healthData", currentUser.email);
-                
-                // Get current timestamp
+
+              const { data: { user } } = await supabase.auth.getUser();
+              if (user && user.email) {
                 const now = new Date();
                 const simpleFormat = formatDate(now.toISOString());
-                
-                // Determine motion state
                 const motionState = determineMotionState(data.accelerometer, data.gyroscope);
-                
-                // Get heart rate and SpO2 directly from pulse oximeter
                 const heartRate = data.pulseoximeter.heartRate;
                 const bloodOxygen = data.pulseoximeter.SpO2;
-                
-                // Update Firestore
+
                 try {
-                  await setDoc(
-                    userHealthDocRef,
-                    {
-                      heartRate: `${heartRate} BPM`,
-                      bloodOxygen: `${bloodOxygen}%`,
-                      motionState: motionState,
-                      lastUpdated: simpleFormat,
-                      rawData: {
+                  // Ensure user exists in 'users' table to avoid FK constraint error
+                  const { data: userData, error: userError } = await supabase
+                    .from("users")
+                    .select("email")
+                    .eq("email", user.email)
+                    .single();
+
+                  if (userError || !userData) {
+                    console.log("⚠️ User not found in 'users' table, creating stub...");
+                    await supabase.from("users").insert({ email: user.email, name: "New Patient" });
+                  }
+
+                  const { error } = await supabase
+                    .from("health_data")
+                    .upsert({
+                      patient_email: user.email,
+                      heart_rate: `${heartRate} BPM`,
+                      blood_oxygen: `${bloodOxygen}%`,
+                      motion_state: motionState,
+                      last_updated: simpleFormat,
+                      raw_data: {
                         gyroscope: data.gyroscope,
                         accelerometer: data.accelerometer,
                         pulseoximeter: data.pulseoximeter
                       }
-                    },
-                    { merge: true }
-                  );
-                  
-                  console.log(`✅ Health data updated in Firestore: HR=${heartRate}, SpO2=${bloodOxygen}, Motion=${motionState}`);
+                    }, { onConflict: 'patient_email' });
+
+                  if (error) throw error;
+                  console.log(`✅ Health data updated in Supabase: HR=${heartRate}, SpO2=${bloodOxygen}, Motion=${motionState}`);
                 } catch (error) {
                   console.error("❌ Error updating health data:", error);
                 }
@@ -114,33 +120,28 @@ export const startSensorDataCollection = () => {
           console.error("❌ Error parsing WebSocket message:", error);
         }
       };
-      
+
       wsConnection.onclose = () => {
         console.log("❌ WebSocket Disconnected");
-        // Try to reconnect after a delay if still active
         if (isActive) {
           setTimeout(connectWebSocket, 5000);
         }
       };
-      
+
       wsConnection.onerror = (error) => {
         console.error("❌ WebSocket Error:", error);
-        // Close the connection (will trigger onclose and reconnect)
         wsConnection?.close();
       };
     } catch (error) {
       console.error("❌ Error connecting to WebSocket:", error);
-      // Try to reconnect after a delay if still active
       if (isActive) {
         setTimeout(connectWebSocket, 5000);
       }
     }
   };
-  
-  // Start the WebSocket connection
+
   connectWebSocket();
-  
-  // Return a cleanup function
+
   return () => {
     console.log("🛑 Stopping sensor data collection...");
     isActive = false;

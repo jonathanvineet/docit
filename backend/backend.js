@@ -1,3 +1,4 @@
+import "./polyfill.js";
 import express from "express";
 import twilio from "twilio";
 import axios from "axios";

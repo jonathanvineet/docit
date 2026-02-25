@@ -10,8 +10,7 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
-import { FIREBASE_AUTH } from "@/FirebaseConfig";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { supabase } from "@/SupabaseConfig";
 
 type RootStackParamList = {
   Login: undefined;
@@ -20,10 +19,10 @@ type RootStackParamList = {
 };
 
 type NavigationProp = StackNavigationProp<RootStackParamList, "Register">;
+
 const RegisterScreen = () => {
   const navigation = useNavigation<NavigationProp>();
   const [loading, setLoading] = useState(false);
-  const auth = FIREBASE_AUTH;
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -38,22 +37,26 @@ const RegisterScreen = () => {
     setLoading(true);
     if (!form.email || !form.password || !form.confirmPassword) {
       Alert.alert("Error", "Please fill in all fields.");
-    } else if (form.password !== form.confirmPassword) {
+      setLoading(false);
+      return;
+    }
+    if (form.password !== form.confirmPassword) {
       Alert.alert("Error", "Passwords do not match.");
-    } else {
-      try {
-        const response = await createUserWithEmailAndPassword(
-          auth,
-          form.email,
-          form.password
-        );
-        Alert.alert("Success", "Registration successful!");
-        navigation.navigate("EditInfo", { from: "register" });
-      } catch (error: any) {
-        alert("Register failed: " + error.message);
-      } finally {
-        setLoading(false);
-      }
+      setLoading(false);
+      return;
+    }
+    try {
+      const { error } = await supabase.auth.signUp({
+        email: form.email,
+        password: form.password,
+      });
+      if (error) throw error;
+      Alert.alert("Success", "Registration successful!");
+      navigation.navigate("EditInfo", { from: "register" });
+    } catch (error: any) {
+      alert("Register failed: " + error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -69,6 +72,8 @@ const RegisterScreen = () => {
         placeholderTextColor="#888"
         value={form.email}
         onChangeText={(e) => handleInputChange("email", e)}
+        autoCapitalize="none"
+        keyboardType="email-address"
       />
       <TextInput
         style={styles.input}

@@ -5,13 +5,10 @@ import {
   StyleSheet,
   Modal,
   TouchableOpacity,
-  ScrollView,
   ActivityIndicator,
   Alert,
 } from "react-native";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { collection, query, where, orderBy, getDocs } from "firebase/firestore";
-import { getFirestore } from "firebase/firestore";
+import { supabase } from "@/SupabaseConfig";
 
 type MedicalHistoryModalProps = {
   isVisible: boolean;
@@ -26,28 +23,19 @@ const MedicalHistoryModal = ({
 }: MedicalHistoryModalProps) => {
   const [loading, setLoading] = useState(true);
   const [historyData, setHistoryData] = useState<any[]>([]);
-  // Keep track of whether we've tried to fetch data for this session
   const [hasFetched, setHasFetched] = useState(false);
-
-  // Use this to track if the component is mounted
   const isMounted = useRef(true);
 
   useEffect(() => {
-    // Set up the cleanup function
-    return () => {
-      isMounted.current = false;
-    };
+    return () => { isMounted.current = false; };
   }, []);
 
   useEffect(() => {
-    // Reset fetched flag when modal closes
     if (!isVisible) {
       setHasFetched(false);
     }
 
-    // Only fetch when modal is visible, we have a valid email, and haven't already fetched
     if (isVisible && patientEmail && patientEmail !== "" && !hasFetched) {
-      console.log("Fetching medical history for:", patientEmail);
       fetchMedicalHistory();
       setHasFetched(true);
     }
@@ -56,36 +44,19 @@ const MedicalHistoryModal = ({
   const fetchMedicalHistory = async () => {
     setLoading(true);
     try {
-      const db = getFirestore();
+      const { data, error } = await supabase
+        .from("history")
+        .select("*")
+        .eq("patient_email", patientEmail)
+        .order("created_at", { ascending: false });
 
-      // Create a query against the history collection
-      const historyQuery = query(
-        collection(db, "history"),
-        where("patientEmail", "==", patientEmail)
-        // Temporarily remove the orderBy to rule out index issues
-        // orderBy("timestamp", "desc")
-      );
+      if (error) throw error;
 
-      console.log("Executing history query for:", patientEmail);
-      const querySnapshot = await getDocs(historyQuery);
-      const items: any[] = [];
-
-      querySnapshot.forEach((doc) => {
-        console.log("History doc data:", doc.data());
-        items.push({
-          id: doc.id,
-          ...doc.data(),
-        });
-      });
-
-      console.log(`Found ${items.length} history records`);
-
-      // Only update state if the component is still mounted
       if (isMounted.current) {
-        setHistoryData(items);
+        setHistoryData(data || []);
         setLoading(false);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching medical history:", error);
       Alert.alert("Error", "Failed to load medical history records");
       if (isMounted.current) {
@@ -93,41 +64,6 @@ const MedicalHistoryModal = ({
       }
     }
   };
-
-  const formatDate = (timestamp: any) => {
-    if (!timestamp) return "Date not specified";
-
-    // Handle Firestore timestamp object
-    if (timestamp && typeof timestamp.toDate === "function") {
-      try {
-        return timestamp.toDate().toLocaleDateString();
-      } catch (e) {
-        console.error("Error formatting timestamp:", e);
-        return "Invalid date";
-      }
-    }
-
-    // Handle string dates
-    if (typeof timestamp === "string") {
-      return timestamp;
-    }
-
-    // Handle date objects
-    if (timestamp instanceof Date) {
-      return timestamp.toLocaleDateString();
-    }
-
-    return "Date format unknown";
-  };
-
-  // Force a render to show the actual state data
-  const renderData = historyData.map((item) => ({
-    ...item,
-    // Make sure timestamp is properly handled for rendering
-    formattedDate:
-      item.date || (item.timestamp ? formatDate(item.timestamp) : "No date"),
-  }));
-  console.log("About to render with data:", renderData);
 
   return (
     <Modal
@@ -138,38 +74,32 @@ const MedicalHistoryModal = ({
     >
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
-          <Text style={{ fontSize: 20, fontWeight: "bold" }}>
-            Medical History ({renderData.length} record)
+          <Text style={{ fontSize: 20, fontWeight: "bold", marginBottom: 15 }}>
+            Medical History ({historyData.length} records)
           </Text>
 
-          {/* Simple debug view */}
-          {renderData.map((item) => (
-            <View
-              key={item.id}
-              style={{
-                padding: 10,
-                marginVertical: 5,
-                backgroundColor: "#f0f0f0",
-                borderRadius: 5,
-              }}
-            >
-              <Text style={styles.historyItemheader}>
-                {item.doctor} {item.formattedDate}
-              </Text>
-              <Text style={styles.historyItemTitle}>Problem: {item.title}</Text>
-              <Text style={styles.historyItemTitle}>
-                Description: {item.description}
-              </Text>
-              <Text style={styles.historyItemTitle}>
-                Presciption: {item.medication}
-              </Text>
+          {loading ? (
+            <ActivityIndicator size="large" color="#0F6D66" style={{ marginVertical: 20 }} />
+          ) : (
+            <View style={{ flex: 1 }}>
+              {historyData.length > 0 ? (
+                historyData.map((item) => (
+                  <View key={item.id} style={styles.historyItem}>
+                    <Text style={styles.historyItemheader}>
+                      {item.doctor} - {item.date || new Date(item.created_at).toLocaleDateString()}
+                    </Text>
+                    <Text style={styles.historyItemTitle}>Problem: {item.title}</Text>
+                    <Text style={styles.historyItemTitle}>Description: {item.description}</Text>
+                    <Text style={styles.historyItemTitle}>Prescription: {item.medication}</Text>
+                  </View>
+                ))
+              ) : (
+                <Text style={styles.emptyMessage}>No medical history found for this patient.</Text>
+              )}
             </View>
-          ))}
+          )}
 
-          <TouchableOpacity
-            onPress={onClose}
-            style={{ alignSelf: "center", marginTop: 20, padding: 10 }}
-          >
+          <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
             <Text style={{ color: "#0F6D66", fontWeight: "bold" }}>Close</Text>
           </TouchableOpacity>
         </View>
@@ -179,66 +109,13 @@ const MedicalHistoryModal = ({
 };
 
 const styles = StyleSheet.create({
-  modalContainer: {
-    flex: 1,
-    justifyContent: "center",
-    backgroundColor: "rgba(0,0,0,0.5)",
-    padding: 20,
-  },
-  modalContent: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    padding: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-    maxHeight: "80%",
-  },
-  modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: "#EEEEEE",
-    paddingBottom: 10,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#0F6D66",
-  },
-  closeButton: {
-    padding: 5,
-  },
-  historyList: {
-    flex: 1,
-  },
-  historyItem: {
-    padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: "#EEEEEE",
-  },
-  historyItemheader: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#0F6D66",
-  },
-
-  historyItemTitle: {
-    fontSize: 17,
-  },
-  loader: {
-    marginVertical: 20,
-  },
-  emptyMessage: {
-    textAlign: "center",
-    color: "#777777",
-    fontStyle: "italic",
-    padding: 20,
-  },
+  modalContainer: { flex: 1, justifyContent: "center", backgroundColor: "rgba(0,0,0,0.5)", padding: 20 },
+  modalContent: { backgroundColor: "#FFFFFF", borderRadius: 12, padding: 20, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 4, elevation: 5, maxHeight: "80%" },
+  historyItem: { padding: 10, marginVertical: 5, backgroundColor: "#f0f0f0", borderRadius: 5 },
+  historyItemheader: { fontSize: 16, fontWeight: "bold", color: "#0F6D66" },
+  historyItemTitle: { fontSize: 15, marginTop: 2 },
+  emptyMessage: { textAlign: "center", color: "#777777", fontStyle: "italic", padding: 20 },
+  closeBtn: { alignSelf: "center", marginTop: 20, padding: 10 },
 });
 
 export default MedicalHistoryModal;

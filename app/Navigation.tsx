@@ -6,7 +6,7 @@ import RegisterScreen from "./_components/login/RegisterScreen";
 import Dashboard from "./_components/dashboard/Dashboard";
 import ProfilePage from "./_components/profile/ProfilePage";
 import EditInfo from "./_components/profile/EditInfo";
-import MapScreen from "./_components/location/MapScreen";
+import MapScreen from "./_components/location/MapScreenWrapper";
 import PatientScreen from "./_components/login/PatientScreen";
 import DoctorLogin from "./_components/login/DoctorLogin";
 import DoctorDashboard from "./_components/doctor/DoctorDashboard";

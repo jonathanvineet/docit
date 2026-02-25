@@ -1,86 +1,43 @@
 import React, { useState } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  TextInput,
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
+  View, Text, StyleSheet, TouchableOpacity, TextInput,
+  ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
-import { FIREBASE_AUTH } from "@/FirebaseConfig";
-import {
-  getFirestore,
-  collection,
-  query,
-  where,
-  getDocs,
-  doc,
-  updateDoc,
-  arrayUnion,
-  addDoc,
-  serverTimestamp,
-} from "firebase/firestore";
+import { supabase } from "@/SupabaseConfig";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 
-type RootStackParamList = {
-  DoctorDashboard: undefined;
-  ConnectPatient: undefined;
-};
-
+type RootStackParamList = { DoctorDashboard: undefined; ConnectPatient: undefined };
 type NavigationProp = StackNavigationProp<RootStackParamList, "ConnectPatient">;
 
 const ConnectPatient = () => {
   const navigation = useNavigation<NavigationProp>();
   const [patientEmail, setPatientEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [foundPatient, setFoundPatient] = useState<{
-    id: string;
-    name: string;
-    email: string;
-  } | null>(null);
+  const [foundPatient, setFoundPatient] = useState<{ id: string; name: string; email: string } | null>(null);
 
   const searchPatient = async () => {
     if (!patientEmail || !patientEmail.includes("@")) {
       Alert.alert("Invalid Email", "Please enter a valid email address");
       return;
     }
-
     setLoading(true);
     try {
-      const db = getFirestore();
-      const usersRef = collection(db, "users");
-      const q = query(usersRef, where("email", "==", patientEmail.trim()));
+      const { data, error } = await supabase
+        .from("users")
+        .select("email, name")
+        .eq("email", patientEmail.trim())
+        .single();
 
-      const querySnapshot = await getDocs(q);
-
-      if (querySnapshot.empty) {
-        Alert.alert(
-          "Patient Not Found",
-          "No patient found with this email address."
-        );
+      if (error || !data) {
+        Alert.alert("Patient Not Found", "No patient found with this email address.");
         setFoundPatient(null);
       } else {
-        const patientDoc = querySnapshot.docs[0];
-        const patientData = patientDoc.data();
-
-        setFoundPatient({
-          id: patientDoc.id,
-          name: patientData.name || "Unknown",
-          email: patientData.email,
-        });
+        setFoundPatient({ id: data.email, name: data.name || "Unknown", email: data.email });
       }
     } catch (error: any) {
-      console.error("Error searching for patient:", error);
-      Alert.alert(
-        "Error",
-        "An error occurred while searching for the patient."
-      );
+      Alert.alert("Error", "An error occurred while searching.");
     } finally {
       setLoading(false);
     }
@@ -88,96 +45,44 @@ const ConnectPatient = () => {
 
   const sendConnectionRequest = async () => {
     if (!foundPatient) return;
-
     setLoading(true);
     try {
-      const db = getFirestore();
-      const currentUser = FIREBASE_AUTH.currentUser;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { Alert.alert("Error", "You must be logged in."); return; }
 
-      if (!currentUser) {
-        Alert.alert(
-          "Error",
-          "You must be logged in to send connection requests."
-        );
-        navigation.navigate("DoctorDashboard");
-        return;
-      }
+      const { data: doctor } = await supabase
+        .from("doctors")
+        .select("id, name, email")
+        .eq("email", user.email)
+        .single();
 
-      const userRef = collection(db, "users");
-      const userQuery = query(
-        userRef,
-        where("email", "==", foundPatient.email)
-      );
-      const userSnapshot = await getDocs(userQuery);
-      if (userSnapshot.empty) {
-        // user not found
-        Alert.alert(
-          "Error",
-          "Could not find patient's authentication details."
-        );
-        return;
-      }
+      if (!doctor) { Alert.alert("Error", "Doctor profile not found."); return; }
 
-      const patientAuthUid = userSnapshot.docs[0].id;
-      // Find the doctor's document
-      const doctorsRef = collection(db, "doctors");
-      const q = query(doctorsRef, where("email", "==", currentUser.email));
-      const querySnapshot = await getDocs(q);
-
-      if (querySnapshot.empty) {
-        Alert.alert("Error", "Doctor profile not found.");
-        return;
-      }
-
-      const doctorDoc = querySnapshot.docs[0];
-      const doctorData = doctorDoc.data();
-
-      // Create a connection request
-      await addDoc(collection(db, "connectionRequests"), {
-        patientId: patientAuthUid,
-        patientEmail: foundPatient.email,
-        doctorId: doctorDoc.id,
-        doctorName: doctorData.name,
-        doctorEmail: doctorData.email,
+      const { error } = await supabase.from("connection_requests").insert({
+        patient_email: foundPatient.email,
+        doctor_id: doctor.id,
+        doctor_name: doctor.name,
+        doctor_email: doctor.email,
         status: "pending",
-        createdAt: serverTimestamp(),
       });
 
-      Alert.alert(
-        "Connection Request Sent",
-        `A connection request has been sent to ${foundPatient.name}. 
-        They will need to accept the request to establish the connection.`,
-        [
-          {
-            text: "OK",
-            onPress: () => navigation.navigate("DoctorDashboard"),
-          },
-        ]
-      );
+      if (error) throw error;
+
+      Alert.alert("Request Sent", `A connection request has been sent to ${foundPatient.name}.`, [
+        { text: "OK", onPress: () => navigation.navigate("DoctorDashboard") },
+      ]);
     } catch (error: any) {
-      console.error("Error sending connection request:", error);
-      Alert.alert(
-        "Error",
-        "Failed to send connection request. Please try again."
-      );
+      Alert.alert("Error", "Failed to send connection request. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
-    >
+    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
+          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
             <FontAwesome name="arrow-left" size={20} color="#FFFFFF" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Connect with Patient</Text>
@@ -185,11 +90,8 @@ const ConnectPatient = () => {
         </View>
 
         <View style={styles.contentContainer}>
-          <Text style={styles.instructionText}>
-            Enter the patient's email address to send a connection request.
-          </Text>
+          <Text style={styles.instructionText}>Enter the patient's email address to send a connection request.</Text>
 
-          {/* Search Input */}
           <View style={styles.searchContainer}>
             <TextInput
               style={styles.input}
@@ -199,20 +101,11 @@ const ConnectPatient = () => {
               keyboardType="email-address"
               autoCapitalize="none"
             />
-            <TouchableOpacity
-              style={styles.searchButton}
-              onPress={searchPatient}
-              disabled={loading}
-            >
-              {loading ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
-              ) : (
-                <Text style={styles.searchButtonText}>Search</Text>
-              )}
+            <TouchableOpacity style={styles.searchButton} onPress={searchPatient} disabled={loading}>
+              {loading ? <ActivityIndicator size="small" color="#FFFFFF" /> : <Text style={styles.searchButtonText}>Search</Text>}
             </TouchableOpacity>
           </View>
 
-          {/* Found Patient Card */}
           {foundPatient && (
             <View style={styles.patientCardContainer}>
               <View style={styles.patientCard}>
@@ -224,22 +117,10 @@ const ConnectPatient = () => {
                   <Text style={styles.patientEmail}>{foundPatient.email}</Text>
                 </View>
               </View>
-
-              <TouchableOpacity
-                style={styles.connectButton}
-                onPress={sendConnectionRequest}
-                disabled={loading}
-              >
-                {loading ? (
-                  <ActivityIndicator size="small" color="#FFFFFF" />
-                ) : (
+              <TouchableOpacity style={styles.connectButton} onPress={sendConnectionRequest} disabled={loading}>
+                {loading ? <ActivityIndicator size="small" color="#FFFFFF" /> : (
                   <>
-                    <FontAwesome
-                      name="link"
-                      size={16}
-                      color="#FFFFFF"
-                      style={styles.connectIcon}
-                    />
+                    <FontAwesome name="link" size={16} color="#FFFFFF" style={styles.connectIcon} />
                     <Text style={styles.connectButtonText}>Send Request</Text>
                   </>
                 )}
@@ -253,122 +134,27 @@ const ConnectPatient = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#FFFFFF",
-  },
-  scrollContent: {
-    flexGrow: 1,
-  },
-  header: {
-    backgroundColor: "#0F6D66",
-    paddingTop: 40,
-    paddingBottom: 15,
-    paddingHorizontal: 20,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  backButton: {
-    padding: 5,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#FFFFFF",
-  },
-  placeholderView: {
-    width: 30, // To balance the back button
-  },
-  contentContainer: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 25,
-  },
-  instructionText: {
-    fontSize: 16,
-    color: "#555555",
-    marginBottom: 20,
-    textAlign: "center",
-  },
-  searchContainer: {
-    flexDirection: "row",
-    marginBottom: 30,
-  },
-  input: {
-    flex: 1,
-    height: 50,
-    borderWidth: 1,
-    borderColor: "#DDDDDD",
-    borderRadius: 8,
-    paddingHorizontal: 15,
-    fontSize: 16,
-    backgroundColor: "#F9F9F9",
-  },
-  searchButton: {
-    backgroundColor: "#0F6D66",
-    paddingHorizontal: 20,
-    justifyContent: "center",
-    alignItems: "center",
-    borderTopRightRadius: 8,
-    borderBottomRightRadius: 8,
-    marginLeft: -1,
-  },
-  searchButtonText: {
-    color: "#FFFFFF",
-    fontWeight: "bold",
-  },
-  patientCardContainer: {
-    alignItems: "center",
-  },
-  patientCard: {
-    backgroundColor: "#F5F5F5",
-    borderRadius: 12,
-    padding: 20,
-    flexDirection: "row",
-    alignItems: "center",
-    width: "100%",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
-    marginBottom: 20,
-  },
-  avatarContainer: {
-    marginRight: 15,
-  },
-  patientInfo: {
-    flex: 1,
-  },
-  patientName: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#333333",
-  },
-  patientEmail: {
-    fontSize: 16,
-    color: "#666666",
-    marginTop: 5,
-  },
-  connectButton: {
-    backgroundColor: "#0F6D66",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 25,
-    borderRadius: 8,
-    width: "50%",
-  },
-  connectIcon: {
-    marginRight: 8,
-  },
-  connectButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
+  container: { flex: 1, backgroundColor: "#FFFFFF" },
+  scrollContent: { flexGrow: 1 },
+  header: { backgroundColor: "#0F6D66", paddingTop: 40, paddingBottom: 15, paddingHorizontal: 20, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  backButton: { padding: 5 },
+  headerTitle: { fontSize: 18, fontWeight: "bold", color: "#FFFFFF" },
+  placeholderView: { width: 30 },
+  contentContainer: { flex: 1, paddingHorizontal: 20, paddingTop: 25 },
+  instructionText: { fontSize: 16, color: "#555555", marginBottom: 20, textAlign: "center" },
+  searchContainer: { flexDirection: "row", marginBottom: 30 },
+  input: { flex: 1, height: 50, borderWidth: 1, borderColor: "#DDDDDD", borderRadius: 8, paddingHorizontal: 15, fontSize: 16, backgroundColor: "#F9F9F9" },
+  searchButton: { backgroundColor: "#0F6D66", paddingHorizontal: 20, justifyContent: "center", alignItems: "center", borderTopRightRadius: 8, borderBottomRightRadius: 8, marginLeft: -1 },
+  searchButtonText: { color: "#FFFFFF", fontWeight: "bold" },
+  patientCardContainer: { alignItems: "center" },
+  patientCard: { backgroundColor: "#F5F5F5", borderRadius: 12, padding: 20, flexDirection: "row", alignItems: "center", width: "100%", shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 3, elevation: 2, marginBottom: 20 },
+  avatarContainer: { marginRight: 15 },
+  patientInfo: { flex: 1 },
+  patientName: { fontSize: 18, fontWeight: "bold", color: "#333333" },
+  patientEmail: { fontSize: 16, color: "#666666", marginTop: 5 },
+  connectButton: { backgroundColor: "#0F6D66", flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 12, paddingHorizontal: 25, borderRadius: 8, width: "50%" },
+  connectIcon: { marginRight: 8 },
+  connectButtonText: { color: "#FFFFFF", fontSize: 16, fontWeight: "bold" },
 });
 
 export default ConnectPatient;

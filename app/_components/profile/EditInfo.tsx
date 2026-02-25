@@ -1,5 +1,4 @@
 import { FontAwesome } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -10,8 +9,7 @@ import {
 } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
-import { FIREBASE_DB, FIREBASE_AUTH } from "@/FirebaseConfig"; // Import Firestore
-import { doc, setDoc, getDoc } from "firebase/firestore";
+import { supabase } from "@/SupabaseConfig";
 
 type RootStackParamList = {
   Home: undefined;
@@ -31,7 +29,6 @@ type RouteProps = {
 function EditInfo() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<RouteProps>();
-  // Get the source of navigation (default to 'register' if not specified)
   const navigatedFrom = route.params?.from || "register";
 
   const [name, setName] = useState("");
@@ -43,62 +40,59 @@ function EditInfo() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch existing user data if they're editing their profile
     const fetchUserData = async () => {
-      const user = FIREBASE_AUTH.currentUser;
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      try {
-        const userRef = doc(FIREBASE_DB, "users", user.email!);
-        const userSnap = await getDoc(userRef);
+      const { data, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("email", user.email)
+        .single();
 
-        if (userSnap.exists()) {
-          const userData = userSnap.data();
-          setName(userData.name || "");
-          setEmail(userData.email || "");
-          setPhone(userData.phone || "");
-          setHeight(userData.height || "");
-          setWeight(userData.weight || "");
-          setAge(userData.age || "");
-        }
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-      } finally {
-        setLoading(false);
+      if (data) {
+        setName(data.name || "");
+        setEmail(data.email || "");
+        setPhone(data.phone || "");
+        setHeight(data.height || "");
+        setWeight(data.weight || "");
+        setAge(data.age || "");
       }
+      setLoading(false);
     };
 
     fetchUserData();
   }, []);
 
   const createProfile = async () => {
-    const user = FIREBASE_AUTH.currentUser;
-    // If no user is authenticated, show an error
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       alert("User not authenticated");
       return;
     }
 
-    const newEmail = user.email!.toLowerCase();
-    setEmail(newEmail);
+    const userEmail = user.email!.toLowerCase();
+    setEmail(userEmail);
 
-    try {
-      await setDoc(doc(FIREBASE_DB, "users", user.email!), {
-        name,
-        email: user.email,
-        phone,
-        height,
-        weight,
-        age,
-      });
-      alert("Profile Saved Succesfully");
-      if (navigatedFrom === "profile") {
-        navigation.navigate("ProfilePage");
-      } else {
-        navigation.navigate("Dashboard");
-      }
-    } catch (error: any) {
-      alert("Error saving Profile" + error.message);
+    const { error } = await supabase.from("users").upsert({
+      email: userEmail,
+      name,
+      phone,
+      height,
+      weight,
+      age,
+    }, { onConflict: "email" });
+
+    if (error) {
+      alert("Error saving Profile: " + error.message);
+      return;
+    }
+
+    alert("Profile Saved Successfully");
+    if (navigatedFrom === "profile") {
+      navigation.navigate("ProfilePage");
+    } else {
+      navigation.navigate("Dashboard");
     }
   };
 
@@ -107,7 +101,6 @@ function EditInfo() {
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => {
-            // Go back to the source screen
             if (navigatedFrom === "profile") {
               navigation.navigate("ProfilePage");
             } else {
@@ -148,7 +141,7 @@ function EditInfo() {
               onChangeText={setEmail}
               style={styles.input}
               placeholder="Enter Email"
-              editable={false} // Email should not be editable (from auth)
+              editable={false}
             />
           </View>
 

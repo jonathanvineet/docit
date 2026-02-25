@@ -30,7 +30,7 @@ export default function SOSButton() {
 
       if (!devIP) throw new Error("Could not determine local IP address.");
 
-      const backendBaseURL = `http://${devIP}:3000`;
+      const backendBaseURL = `http://${devIP}:3001`;
       const message = "Your patient might be in dire need of an emergency, Please respond immediately";
 
       // Call

@@ -10,8 +10,7 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
-import { FIREBASE_AUTH } from "@/FirebaseConfig";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { supabase } from "@/SupabaseConfig";
 
 type RootStackParamList = {
   Login: undefined;
@@ -26,20 +25,12 @@ const LoginScreen = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const auth = FIREBASE_AUTH;
-
-  const handleInputChange = (field: string, value: string) => {
-    if (field === "email") {
-      setEmail(value);
-    } else {
-      setPassword(value);
-    }
-  };
 
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      const response = await signInWithEmailAndPassword(auth, email, password);
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
       navigation.navigate("Dashboard");
     } catch (error: any) {
       alert("Signin failed: " + error.message);
@@ -58,7 +49,9 @@ const LoginScreen = () => {
         placeholder="Email"
         placeholderTextColor="#888"
         value={email}
-        onChangeText={(e) => handleInputChange("email", e)}
+        onChangeText={setEmail}
+        autoCapitalize="none"
+        keyboardType="email-address"
       />
       <TextInput
         style={styles.input}
@@ -66,7 +59,7 @@ const LoginScreen = () => {
         placeholderTextColor="#888"
         secureTextEntry
         value={password}
-        onChangeText={(e) => handleInputChange("password", e)}
+        onChangeText={setPassword}
       />
 
       {loading ? (

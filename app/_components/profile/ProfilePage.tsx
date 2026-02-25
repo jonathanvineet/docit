@@ -10,14 +10,12 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from "react-native";
-import { Link, useRouter } from "expo-router";
-
-const profileImg = require("@/assets/images/photo.jpeg");
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
-import { FIREBASE_AUTH, FIREBASE_DB } from "@/FirebaseConfig";
-import { doc, getDoc } from "firebase/firestore";
+import { supabase } from "@/SupabaseConfig";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+
+const profileImg = require("@/assets/images/photo.jpeg");
 
 type RootStackParamList = {
   Home: undefined;
@@ -42,81 +40,54 @@ const ProfilePage = () => {
 
   useEffect(() => {
     const fetchUserData = async () => {
-      const user = FIREBASE_AUTH.currentUser;
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         navigation.replace("Login");
         return;
       }
       try {
-        const cachedUsername = await AsyncStorage.getItem("username");
-        if (cachedUsername) {
-          setUsername(cachedUsername);
+        const cached = await AsyncStorage.getItem("username");
+        if (cached) {
+          setUsername(cached);
           setFetching(false);
-          updateUsernameinBackground(user.email);
+          updateInBackground(user.email!);
         } else {
-          await fetchUsernameFromFirestore(user.email);
+          await fetchFromSupabase(user.email!);
         }
       } catch (error: any) {
-        alert("Error fetching Profile :" + error.message);
+        alert("Error fetching Profile: " + error.message);
         setUsername("User");
-        setFetching(false);
-      } finally {
         setFetching(false);
       }
     };
-
     fetchUserData();
   }, []);
 
-  const updateUsernameinBackground = async (email: string | null) => {
-    if (!email) return;
-
-    try {
-      const userRef = doc(FIREBASE_DB, "users", email!);
-      const userSnap = await getDoc(userRef);
-
-      if (userSnap.exists()) {
-        const userData = userSnap.data();
-        AsyncStorage.setItem("username", userData.name);
-        if (userData.name !== username) {
-          setUsername(userData.name);
-        }
-      }
-    } catch (error: any) {
-      alert("Error fetching Background name:" + error.message);
+  const updateInBackground = async (email: string) => {
+    const { data } = await supabase
+      .from("users")
+      .select("name")
+      .eq("email", email)
+      .single();
+    if (data?.name && data.name !== username) {
+      setUsername(data.name);
+      AsyncStorage.setItem("username", data.name);
     }
   };
 
-  const fetchUsernameFromFirestore = async (email: string | null) => {
-    if (!email) return;
-
-    try {
-      const userRef = doc(FIREBASE_DB, "users", email);
-      const userSnap = await getDoc(userRef);
-
-      if (userSnap.exists()) {
-        const userData = userSnap.data();
-        setUsername(userData.name);
-        // Cache the username for future use
-        await AsyncStorage.setItem("username", userData.name);
-      } else {
-        setUsername("User");
-      }
-    } catch (error: any) {
-      alert("Error fetching Profile: " + error.message);
+  const fetchFromSupabase = async (email: string) => {
+    const { data } = await supabase
+      .from("users")
+      .select("name")
+      .eq("email", email)
+      .single();
+    if (data?.name) {
+      setUsername(data.name);
+      await AsyncStorage.setItem("username", data.name);
+    } else {
       setUsername("User");
-    } finally {
-      setFetching(false);
     }
-  };
-
-  const confirmLogout = () => {
-    setModalVisible(false);
-    console.log("Logged out");
-  };
-
-  const cancelLogout = () => {
-    setModalVisible(false);
+    setFetching(false);
   };
 
   return (
@@ -201,7 +172,7 @@ const ProfilePage = () => {
           </Text>
         </TouchableOpacity>
       </View>
-      {/* Log Out Button */}
+
       <View style={styles.logoutContainer}>
         {loading ? (
           <ActivityIndicator size="large" color="#0F6D66" />
@@ -211,7 +182,8 @@ const ProfilePage = () => {
             onPress={async () => {
               setLoading(true);
               try {
-                await FIREBASE_AUTH.signOut();
+                await supabase.auth.signOut();
+                await AsyncStorage.clear();
                 navigation.replace("Login");
               } catch (error: any) {
                 alert("Logout failed: " + error.message);
@@ -224,6 +196,7 @@ const ProfilePage = () => {
           </TouchableOpacity>
         )}
       </View>
+
       <View style={styles.bottomNav}>
         <TouchableOpacity
           style={styles.navButton}
@@ -249,82 +222,6 @@ const ProfilePage = () => {
           <Text style={styles.activeNavText}>Mine</Text>
         </TouchableOpacity>
       </View>
-
-      <Modal
-        visible={isModalVisible}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={cancelLogout}
-      >
-        <View
-          style={{
-            flex: 1,
-            justifyContent: "center",
-            alignItems: "center",
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
-          }}
-        >
-          <View
-            style={{
-              width: "80%",
-              backgroundColor: "#fff",
-              borderRadius: 10,
-              padding: 20,
-              alignItems: "center",
-            }}
-          >
-            <Text
-              style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}
-            >
-              Confirm Logout
-            </Text>
-            <Text
-              style={{
-                fontSize: 16,
-                color: "#333",
-                marginBottom: 20,
-                textAlign: "center",
-              }}
-            >
-              Are you sure you want to logout?
-            </Text>
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                width: "100%",
-              }}
-            >
-              <Pressable
-                onPress={cancelLogout}
-                style={{
-                  flex: 1,
-                  marginRight: 10,
-                  paddingVertical: 10,
-                  backgroundColor: "#26C3A6",
-                  borderRadius: 5,
-                  alignItems: "center",
-                }}
-              >
-                <Text style={{ color: "#fff", fontSize: 16 }}>Cancel</Text>
-              </Pressable>
-              <Pressable
-                onPress={confirmLogout}
-                style={{
-                  flex: 1,
-                  marginLeft: 10,
-                  paddingVertical: 10,
-                  backgroundColor: "#FF6B6B",
-                  borderRadius: 5,
-                  alignItems: "center",
-                }}
-              >
-                <Text style={{ color: "#fff", fontSize: 16 }}>Logout</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 };
