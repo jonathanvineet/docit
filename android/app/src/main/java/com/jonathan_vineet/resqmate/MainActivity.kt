@@ -1,4 +1,4 @@
-package com.jonathan_vineet.resqmate
+package com.docit.resqmate
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

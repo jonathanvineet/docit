@@ -28,7 +28,7 @@
         <key>CFBundleURLSchemes</key>
         <array>
           <string>myapp</string>
-          <string>com.jonathan-vineet.resqmate</string>
+          <string>com.docit.resqmate</string>
         </array>
       </dict>
     </array>

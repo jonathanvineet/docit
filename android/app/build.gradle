@@ -87,9 +87,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.jonathan_vineet.resqmate'
+    namespace 'com.docit.resqmate'
     defaultConfig {
-        applicationId 'com.jonathan_vineet.resqmate'
+        applicationId 'com.docit.resqmate'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

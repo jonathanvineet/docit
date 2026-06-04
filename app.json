@@ -9,14 +9,14 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.jonathan-vineet.resqmate"
+      "bundleIdentifier": "com.docit.resqmate"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.jonathan_vineet.resqmate"
+      "package": "com.docit.resqmate"
     },
     "web": {
       "bundler": "metro",
