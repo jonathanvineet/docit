@@ -9,27 +9,27 @@
 /* Begin PBXBuildFile section */
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		67F033921C1665A93CB8BB3B /* libPods-resqmate.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 85341E4CFA940A25049180B9 /* libPods-resqmate.a */; };
-		8803CFDCD371FA813513DD8F /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F33F02CEC1EEC9B4CD0A604A /* PrivacyInfo.xcprivacy */; };
+		9143397438D58CF143E270B6 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2B9AC78C6ABEDF5064C22F0 /* ExpoModulesProvider.swift */; };
+		934A1631BA4795616D2F7A4A /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F5B6127278467AE06AD49975 /* PrivacyInfo.xcprivacy */; };
+		A7E0384680C6AE08B0B3092A /* libPods-resqmate.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D0C999A9867EB035B82F8D05 /* libPods-resqmate.a */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
-		E53D73C6C44E7CAD9A100A1C /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41924C372C8DA0F437F17364 /* ExpoModulesProvider.swift */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		00D85C6D6153A858DBDB3679 /* Pods-resqmate.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-resqmate.debug.xcconfig"; path = "Target Support Files/Pods-resqmate/Pods-resqmate.debug.xcconfig"; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* resqmate.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = resqmate.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = resqmate/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = resqmate/Info.plist; sourceTree = "<group>"; };
-		41924C372C8DA0F437F17364 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-resqmate/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
-		8411D61B637D11F8FD9CAD81 /* Pods-resqmate.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-resqmate.debug.xcconfig"; path = "Target Support Files/Pods-resqmate/Pods-resqmate.debug.xcconfig"; sourceTree = "<group>"; };
-		85341E4CFA940A25049180B9 /* libPods-resqmate.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-resqmate.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		2433BB6E86C958E0ED0A9444 /* Pods-resqmate.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-resqmate.release.xcconfig"; path = "Target Support Files/Pods-resqmate/Pods-resqmate.release.xcconfig"; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = resqmate/SplashScreen.storyboard; sourceTree = "<group>"; };
+		B2B9AC78C6ABEDF5064C22F0 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-resqmate/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
-		ED02F2EFFA87C2914D5D8232 /* Pods-resqmate.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-resqmate.release.xcconfig"; path = "Target Support Files/Pods-resqmate/Pods-resqmate.release.xcconfig"; sourceTree = "<group>"; };
+		D0C999A9867EB035B82F8D05 /* libPods-resqmate.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-resqmate.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = resqmate/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* resqmate-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "resqmate-Bridging-Header.h"; path = "resqmate/resqmate-Bridging-Header.h"; sourceTree = "<group>"; };
-		F33F02CEC1EEC9B4CD0A604A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = resqmate/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		F5B6127278467AE06AD49975 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = resqmate/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -37,13 +37,21 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				67F033921C1665A93CB8BB3B /* libPods-resqmate.a in Frameworks */,
+				A7E0384680C6AE08B0B3092A /* libPods-resqmate.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		019B7A4710B4D3B1E873D1EA /* ExpoModulesProviders */ = {
+			isa = PBXGroup;
+			children = (
+				24B0A68F76BAE2811F744A93 /* resqmate */,
+			);
+			name = ExpoModulesProviders;
+			sourceTree = "<group>";
+		};
 		13B07FAE1A68108700A75B9A /* resqmate */ = {
 			isa = PBXGroup;
 			children = (
@@ -53,7 +61,15 @@
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				F33F02CEC1EEC9B4CD0A604A /* PrivacyInfo.xcprivacy */,
+				F5B6127278467AE06AD49975 /* PrivacyInfo.xcprivacy */,
+			);
+			name = resqmate;
+			sourceTree = "<group>";
+		};
+		24B0A68F76BAE2811F744A93 /* resqmate */ = {
+			isa = PBXGroup;
+			children = (
+				B2B9AC78C6ABEDF5064C22F0 /* ExpoModulesProvider.swift */,
 			);
 			name = resqmate;
 			sourceTree = "<group>";
@@ -62,27 +78,19 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				85341E4CFA940A25049180B9 /* libPods-resqmate.a */,
+				D0C999A9867EB035B82F8D05 /* libPods-resqmate.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		683DE6074433B12050AC232E /* Pods */ = {
+		42DEC1298B973ECD9F19BBA5 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				8411D61B637D11F8FD9CAD81 /* Pods-resqmate.debug.xcconfig */,
-				ED02F2EFFA87C2914D5D8232 /* Pods-resqmate.release.xcconfig */,
+				00D85C6D6153A858DBDB3679 /* Pods-resqmate.debug.xcconfig */,
+				2433BB6E86C958E0ED0A9444 /* Pods-resqmate.release.xcconfig */,
 			);
 			name = Pods;
 			path = Pods;
-			sourceTree = "<group>";
-		};
-		6CD65ED52A051D0AE1952D4F /* ExpoModulesProviders */ = {
-			isa = PBXGroup;
-			children = (
-				8F5D4F9228FDF72E21B63AA5 /* resqmate */,
-			);
-			name = ExpoModulesProviders;
 			sourceTree = "<group>";
 		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
@@ -99,8 +107,8 @@
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				683DE6074433B12050AC232E /* Pods */,
-				6CD65ED52A051D0AE1952D4F /* ExpoModulesProviders */,
+				42DEC1298B973ECD9F19BBA5 /* Pods */,
+				019B7A4710B4D3B1E873D1EA /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -113,14 +121,6 @@
 				13B07F961A680F5B00A75B9A /* resqmate.app */,
 			);
 			name = Products;
-			sourceTree = "<group>";
-		};
-		8F5D4F9228FDF72E21B63AA5 /* resqmate */ = {
-			isa = PBXGroup;
-			children = (
-				41924C372C8DA0F437F17364 /* ExpoModulesProvider.swift */,
-			);
-			name = resqmate;
 			sourceTree = "<group>";
 		};
 		BB2F792B24A3F905000567C9 /* Supporting */ = {
@@ -140,13 +140,13 @@
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "resqmate" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				E12430E353141B510BE98DDD /* [Expo] Configure project */,
+				EBEF199CBD14155FF9BF3172 /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				768267720D45E850B2D1165E /* [CP] Embed Pods Frameworks */,
+				CF3664D18E9E193B708AB809 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -196,7 +196,7 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				8803CFDCD371FA813513DD8F /* PrivacyInfo.xcprivacy in Resources */,
+				934A1631BA4795616D2F7A4A /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -242,28 +242,6 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		768267720D45E850B2D1165E /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-resqmate/Pods-resqmate-frameworks.sh",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/React-Core-prebuilt/React.framework/React",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/ReactNativeDependencies/ReactNativeDependencies.framework/ReactNativeDependencies",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/React.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ReactNativeDependencies.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-resqmate/Pods-resqmate-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
 		800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -296,7 +274,29 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-resqmate/Pods-resqmate-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		E12430E353141B510BE98DDD /* [Expo] Configure project */ = {
+		CF3664D18E9E193B708AB809 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-resqmate/Pods-resqmate-frameworks.sh",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/React-Core-prebuilt/React.framework/React",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/ReactNativeDependencies/ReactNativeDependencies.framework/ReactNativeDependencies",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/React.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ReactNativeDependencies.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-resqmate/Pods-resqmate-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		EBEF199CBD14155FF9BF3172 /* [Expo] Configure project */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
@@ -328,7 +328,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				E53D73C6C44E7CAD9A100A1C /* ExpoModulesProvider.swift in Sources */,
+				9143397438D58CF143E270B6 /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -337,7 +337,7 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 8411D61B637D11F8FD9CAD81 /* Pods-resqmate.debug.xcconfig */;
+			baseConfigurationReference = 00D85C6D6153A858DBDB3679 /* Pods-resqmate.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -361,7 +361,7 @@
 					"-lc++",
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.docit.resqmate";
+				PRODUCT_BUNDLE_IDENTIFIER = com.docit.resqmate;
 				PRODUCT_NAME = resqmate;
 				SWIFT_OBJC_BRIDGING_HEADER = "resqmate/resqmate-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -373,7 +373,7 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = ED02F2EFFA87C2914D5D8232 /* Pods-resqmate.release.xcconfig */;
+			baseConfigurationReference = 2433BB6E86C958E0ED0A9444 /* Pods-resqmate.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -392,7 +392,7 @@
 					"-lc++",
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.docit.resqmate";
+				PRODUCT_BUNDLE_IDENTIFIER = com.docit.resqmate;
 				PRODUCT_NAME = resqmate;
 				SWIFT_OBJC_BRIDGING_HEADER = "resqmate/resqmate-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
