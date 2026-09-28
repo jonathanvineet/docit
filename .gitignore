@@ -44,3 +44,6 @@ app-example
 
 expo-env.d.ts
 # @end expo-cli
+# Android build outputs
+*.aab
+*.apk
