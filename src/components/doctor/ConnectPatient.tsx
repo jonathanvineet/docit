@@ -3,13 +3,13 @@ import {
   View, Text, StyleSheet, TouchableOpacity, TextInput,
   ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import { StackNavigationProp } from "@react-navigation/stack";
+import { useNavigation } from "expo-router/react-navigation";
+import { NativeStackNavigationProp } from "expo-router/native-stack";
 import { supabase } from "@/SupabaseConfig";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 
 type RootStackParamList = { DoctorDashboard: undefined; ConnectPatient: undefined };
-type NavigationProp = StackNavigationProp<RootStackParamList, "ConnectPatient">;
+type NavigationProp = NativeStackNavigationProp<RootStackParamList, "ConnectPatient">;
 
 const ConnectPatient = () => {
   const navigation = useNavigation<NavigationProp>();
@@ -25,10 +25,8 @@ const ConnectPatient = () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from("users")
-        .select("email, name")
-        .eq("email", patientEmail.trim())
-        .single();
+        .rpc("find_patient_by_email", { p_email: patientEmail.trim() })
+        .maybeSingle<{ email: string; name: string | null }>();
 
       if (error || !data) {
         Alert.alert("Patient Not Found", "No patient found with this email address.");

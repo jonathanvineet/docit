@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { createStackNavigator } from "@react-navigation/stack";
+import { View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { createNativeStackNavigator } from "expo-router/native-stack";
 import HomeScreen from "../components/login/HomeScreen";
 import LoginScreen from "../components/login/LoginScreen";
 import RegisterScreen from "../components/login/RegisterScreen";
@@ -19,35 +21,46 @@ import DoctorMessages from "../components/profile/DoctorMessages";
 import DiagnosticHistory from "../components/profile/DiagnosticHistory";
 import MedicalHistoryModal from "../components/doctor/MedicalHistoryModal";
 
-const Stack = createStackNavigator();
+const Stack = createNativeStackNavigator();
 
 const EntryNavigation = () => {
+  // Android draws edge-to-edge, so keep screens clear of the system navigation bar
+  const insets = useSafeAreaInsets();
+
   return (
-    <Stack.Navigator
-      initialRouteName="Home"
-      screenOptions={{
-        headerShown: false,
+    <View
+      style={{
+        flex: 1,
+        paddingBottom: insets.bottom,
+        backgroundColor: "#FFFFFF",
       }}
     >
-      <Stack.Screen name="Login" component={LoginScreen} />
-      <Stack.Screen name="DoctorLogin" component={DoctorLogin} />
-      <Stack.Screen name="PatientScreen" component={PatientScreen} />
-      <Stack.Screen name="DoctorDashboard" component={DoctorDashboard} />
-      <Stack.Screen name="ConnectPatient" component={ConnectPatient} />
-      <Stack.Screen name="PatientDetails" component={PatientDetails} />
-      <Stack.Screen name="DoctorProfile" component={DoctorProfile} />
-      <Stack.Screen name="EditProfile" component={EditProfile} />
-      <Stack.Screen name="Home" component={HomeScreen} />
-      <Stack.Screen name="Register" component={RegisterScreen} />
-      <Stack.Screen name="Dashboard" component={Dashboard} />
-      {/* <Stack.Screen name="MPU" component={SensorDataScreen} /> */}
-      <Stack.Screen name="ProfilePage" component={ProfilePage} />
-      <Stack.Screen name="EditInfo" component={EditInfo} />
-      <Stack.Screen name="Map" component={MapScreen} />
-      <Stack.Screen name="SOS" component={SOSButton} />
-      <Stack.Screen name="DoctorMessages" component={DoctorMessages} />
-      <Stack.Screen name="DiagnosticHistory" component={DiagnosticHistory} />
-    </Stack.Navigator>
+      <Stack.Navigator
+        initialRouteName="Home"
+        screenOptions={{
+          headerShown: false,
+        }}
+      >
+        <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="DoctorLogin" component={DoctorLogin} />
+        <Stack.Screen name="PatientScreen" component={PatientScreen} />
+        <Stack.Screen name="DoctorDashboard" component={DoctorDashboard} />
+        <Stack.Screen name="ConnectPatient" component={ConnectPatient} />
+        <Stack.Screen name="PatientDetails" component={PatientDetails} />
+        <Stack.Screen name="DoctorProfile" component={DoctorProfile} />
+        <Stack.Screen name="EditProfile" component={EditProfile} />
+        <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen name="Register" component={RegisterScreen} />
+        <Stack.Screen name="Dashboard" component={Dashboard} />
+        {/* <Stack.Screen name="MPU" component={SensorDataScreen} /> */}
+        <Stack.Screen name="ProfilePage" component={ProfilePage} />
+        <Stack.Screen name="EditInfo" component={EditInfo} />
+        <Stack.Screen name="Map" component={MapScreen} />
+        <Stack.Screen name="SOS" component={SOSButton} />
+        <Stack.Screen name="DoctorMessages" component={DoctorMessages} />
+        <Stack.Screen name="DiagnosticHistory" component={DiagnosticHistory} />
+      </Stack.Navigator>
+    </View>
   );
 };
 

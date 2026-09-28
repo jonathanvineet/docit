@@ -4,8 +4,8 @@ import {
   ActivityIndicator, Alert, Modal, TextInput,
   KeyboardAvoidingView, Platform,
 } from "react-native";
-import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
-import { StackNavigationProp } from "@react-navigation/stack";
+import { useNavigation, useRoute, RouteProp } from "expo-router/react-navigation";
+import { NativeStackNavigationProp } from "expo-router/native-stack";
 import { supabase } from "@/SupabaseConfig";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import MedicalHistoryModal from "./MedicalHistoryModal";
@@ -15,7 +15,7 @@ type RootStackParamList = {
   PatientDetails: { patientId: string };
 };
 type PatientDetailsScreenRouteProp = RouteProp<RootStackParamList, "PatientDetails">;
-type NavigationProp = StackNavigationProp<RootStackParamList, "PatientDetails">;
+type NavigationProp = NativeStackNavigationProp<RootStackParamList, "PatientDetails">;
 
 const PatientDetails = () => {
   const navigation = useNavigation<NavigationProp>();
@@ -86,7 +86,8 @@ const PatientDetails = () => {
 
     // Subscribe to health data changes
     const healthChannel = supabase
-      .channel("patient-health")
+      // Unique name: channel() would return a same-named channel that is still being removed
+      .channel(`patient-health-${Math.random().toString(36).slice(2)}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "health_data", filter: `patient_email=eq.${patientId}` }, (payload) => {
         const data = payload.new as any;
         setHealthData({

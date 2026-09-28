@@ -32,6 +32,11 @@ const formatDate = (dateString: string) => {
   return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
 };
 
+// The sensor server is optional: if it can't be reached after a few tries we
+// stop quietly and the app keeps showing the last readings stored in Supabase.
+const MAX_FAILED_ATTEMPTS = 3;
+const BASE_RETRY_DELAY_MS = 5000;
+
 // This function starts collecting sensor data and updating Supabase
 export const startSensorDataCollection = () => {
   console.log("🔄 Starting sensor data collection service...");
@@ -39,6 +44,23 @@ export const startSensorDataCollection = () => {
   let lastUpdateTime = Date.now();
   let isActive = true;
   let wsConnection: WebSocket | null = null;
+  let retryTimer: ReturnType<typeof setTimeout> | null = null;
+  let hasConnected = false;
+  let failedAttempts = 0;
+
+  // Retry with backoff; give up if the server has never been reachable
+  const scheduleReconnect = () => {
+    if (!isActive) return;
+    if (!hasConnected) {
+      failedAttempts += 1;
+      if (failedAttempts >= MAX_FAILED_ATTEMPTS) {
+        console.log("ℹ️ Sensor server unavailable, live sensor data disabled");
+        return;
+      }
+    }
+    const delay = hasConnected ? BASE_RETRY_DELAY_MS : BASE_RETRY_DELAY_MS * 2 ** (failedAttempts - 1);
+    retryTimer = setTimeout(connectWebSocket, delay);
+  };
 
   // Function to connect to the WebSocket server
   const connectWebSocket = () => {
@@ -54,6 +76,8 @@ export const startSensorDataCollection = () => {
       wsConnection = new WebSocket(`ws://${devIP}:3000`);
 
       wsConnection.onopen = () => {
+        hasConnected = true;
+        failedAttempts = 0;
         console.log("✅ Connected to WebSocket Server");
       };
 
@@ -122,21 +146,16 @@ export const startSensorDataCollection = () => {
       };
 
       wsConnection.onclose = () => {
-        console.log("❌ WebSocket Disconnected");
-        if (isActive) {
-          setTimeout(connectWebSocket, 5000);
-        }
+        if (!isActive) return;
+        console.log(hasConnected ? "❌ WebSocket Disconnected" : "⚠️ Sensor server not reachable");
+        scheduleReconnect();
       };
 
-      wsConnection.onerror = (error) => {
-        console.error("❌ WebSocket Error:", error);
-        wsConnection?.close();
-      };
+      // onclose always follows and handles the retry; the error event itself has no useful detail
+      wsConnection.onerror = () => {};
     } catch (error) {
-      console.error("❌ Error connecting to WebSocket:", error);
-      if (isActive) {
-        setTimeout(connectWebSocket, 5000);
-      }
+      console.log("⚠️ Could not open sensor connection:", error);
+      scheduleReconnect();
     }
   };
 
@@ -145,6 +164,7 @@ export const startSensorDataCollection = () => {
   return () => {
     console.log("🛑 Stopping sensor data collection...");
     isActive = false;
+    if (retryTimer) clearTimeout(retryTimer);
     if (wsConnection) {
       wsConnection.close();
       wsConnection = null;

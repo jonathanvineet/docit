@@ -10,8 +10,8 @@ import {
   Alert,
   ActivityIndicator,
 } from "react-native";
-import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
-import { StackNavigationProp } from "@react-navigation/stack";
+import { useNavigation, useRoute, RouteProp } from "expo-router/react-navigation";
+import { NativeStackNavigationProp } from "expo-router/native-stack";
 import { supabase } from "@/SupabaseConfig";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -26,7 +26,7 @@ type RootStackParamList = {
   Appointments: undefined;
 };
 
-type NavigationProp = StackNavigationProp<RootStackParamList, "EditProfile">;
+type NavigationProp = NativeStackNavigationProp<RootStackParamList, "EditProfile">;
 type EditProfileRouteProp = RouteProp<RootStackParamList, "EditProfile">;
 
 const EditProfile = () => {
@@ -47,7 +47,7 @@ const EditProfile = () => {
     const fetchDoctorInfo = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        navigation.replace("Login");
+        navigation.reset({ index: 0, routes: [{ name: "Home" }] });
         return;
       }
 
@@ -116,7 +116,7 @@ const EditProfile = () => {
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      navigation.replace("Login");
+      navigation.reset({ index: 0, routes: [{ name: "Home" }] });
       return;
     }
 

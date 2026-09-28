@@ -10,8 +10,8 @@ import {
   Dimensions,
 } from "react-native";
 const { width, height } = Dimensions.get("window");
-import { useNavigation } from "@react-navigation/native";
-import { StackNavigationProp } from "@react-navigation/stack";
+import { useNavigation } from "expo-router/react-navigation";
+import { NativeStackNavigationProp } from "expo-router/native-stack";
 
 type RootStackParamList = {
   Home: undefined;
@@ -19,7 +19,7 @@ type RootStackParamList = {
   DoctorLogin: undefined;
 };
 
-type NavigationProp = StackNavigationProp<RootStackParamList, "Home">;
+type NavigationProp = NativeStackNavigationProp<RootStackParamList, "Home">;
 
 const HomeScreen = () => {
   const navigation = useNavigation<NavigationProp>();

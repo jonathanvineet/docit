@@ -12,12 +12,14 @@ import {
   Alert,
 } from "react-native";
 const { width } = Dimensions.get("window");
-import { useNavigation } from "@react-navigation/native";
-import { StackNavigationProp } from "@react-navigation/stack";
+import { useNavigation } from "expo-router/react-navigation";
+import { NativeStackNavigationProp } from "expo-router/native-stack";
 import { supabase } from "@/SupabaseConfig";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { MaterialIcons } from "@expo/vector-icons";
 import { startSensorDataCollection } from "../../../services/SensorData";
+import { showComingSoon } from "@/src/utils/comingSoon";
 
 type RootStackParamList = {
   Home: undefined;
@@ -31,7 +33,7 @@ type RootStackParamList = {
   SOS: undefined;
 };
 
-type NavigationProp = StackNavigationProp<RootStackParamList, "Dashboard">;
+type NavigationProp = NativeStackNavigationProp<RootStackParamList, "Dashboard">;
 
 interface ConnectionRequest {
   id: string;
@@ -57,14 +59,19 @@ const Dashboard = () => {
 
   useEffect(() => {
     const cleanupSensor = startSensorDataCollection();
+    const channels: RealtimeChannel[] = [];
+    let cancelled = false;
+    // supabase.channel() returns an existing channel with the same name, and removal
+    // finishes asynchronously, so a quick remount would reuse an already-subscribed one
+    const channelSuffix = Math.random().toString(36).slice(2);
 
     const setupSubscriptions = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user?.email) return;
+      if (cancelled || !user?.email) return;
 
       // Fetch health data via realtime subscription
       const healthChannel = supabase
-        .channel("health-data")
+        .channel(`health-data-${channelSuffix}`)
         .on(
           "postgres_changes",
           {
@@ -84,6 +91,7 @@ const Dashboard = () => {
           }
         )
         .subscribe();
+      channels.push(healthChannel);
 
       // Initial health data fetch
       const { data: hd } = await supabase
@@ -106,6 +114,7 @@ const Dashboard = () => {
         .select("*")
         .eq("patient_email", user.email)
         .eq("status", "pending");
+      if (cancelled) return;
 
       if (requests && requests.length > 0) {
         setConnectionRequests(requests);
@@ -114,7 +123,7 @@ const Dashboard = () => {
 
       // Realtime connection requests
       const requestChannel = supabase
-        .channel("connection-requests")
+        .channel(`connection-requests-${channelSuffix}`)
         .on(
           "postgres_changes",
           {
@@ -129,17 +138,14 @@ const Dashboard = () => {
           }
         )
         .subscribe();
-
-      return () => {
-        supabase.removeChannel(healthChannel);
-        supabase.removeChannel(requestChannel);
-      };
+      channels.push(requestChannel);
     };
 
-    const cleanup = setupSubscriptions();
+    setupSubscriptions();
     return () => {
-      if (cleanupSensor) cleanupSensor();
-      cleanup.then((fn) => fn && fn());
+      cancelled = true;
+      cleanupSensor();
+      channels.forEach((channel) => supabase.removeChannel(channel));
     };
   }, []);
 
@@ -157,37 +163,19 @@ const Dashboard = () => {
 
       if (!reqData) { Alert.alert("Error", "Request not found"); return; }
 
+      // Links both sides and removes the request (see respond_to_connection_request in Supabase)
+      const { error } = await supabase.rpc("respond_to_connection_request", {
+        p_request_id: requestId,
+        p_accept: accept,
+      });
+      if (error) throw error;
+
       if (accept) {
-        // Add doctor to patient's connected list
-        const { data: patientData } = await supabase
-          .from("users")
-          .select("connected_doctors")
-          .eq("email", user.email!)
-          .single();
-
-        const existing = patientData?.connected_doctors || [];
-        await supabase.from("users").update({
-          connected_doctors: [...existing, reqData.doctor_id],
-        }).eq("email", user.email!);
-
-        // Add patient to doctor's connected list
-        const { data: doctorData } = await supabase
-          .from("doctors")
-          .select("connected_patients")
-          .eq("id", reqData.doctor_id)
-          .single();
-
-        const existingPatients = doctorData?.connected_patients || [];
-        await supabase.from("doctors").update({
-          connected_patients: [...existingPatients, user.email],
-        }).eq("id", reqData.doctor_id);
-
         Alert.alert("Success", `You are now connected with Dr. ${reqData.doctor_name}`);
       } else {
         Alert.alert("Declined", `Declined connection from Dr. ${reqData.doctor_name}`);
       }
 
-      await supabase.from("connection_requests").delete().eq("id", requestId);
       setConnectionRequests((prev) => prev.filter((r) => r.id !== requestId));
     } catch (error: any) {
       Alert.alert("Error", "Failed to process the connection request.");
@@ -288,7 +276,7 @@ const Dashboard = () => {
       )}
 
       <View style={styles.bottomNav}>
-        <TouchableOpacity style={styles.navButton} onPress={() => navigation.navigate("Chatbot")}>
+        <TouchableOpacity style={styles.navButton} onPress={() => showComingSoon("Chatbot")}>
           <FontAwesome name="comment-o" size={24} color="#999999" />
           <Text style={styles.navText}>Chatbot</Text>
         </TouchableOpacity>

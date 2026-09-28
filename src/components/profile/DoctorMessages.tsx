@@ -3,7 +3,7 @@ import {
   View, Text, FlatList, StyleSheet, TouchableOpacity,
   ActivityIndicator, Alert,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation } from "expo-router/react-navigation";
 import { supabase } from "@/SupabaseConfig";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 

@@ -9,8 +9,8 @@ import {
 import MapView, { Marker, Region } from "react-native-maps";
 import * as Location from "expo-location";
 import axios from "axios";
-import { useNavigation } from "@react-navigation/native";
-import { StackNavigationProp } from "@react-navigation/stack";
+import { useNavigation } from "expo-router/react-navigation";
+import { NativeStackNavigationProp } from "expo-router/native-stack";
 
 type RootStackParamList = {
   Home: undefined;
@@ -24,7 +24,7 @@ type RootStackParamList = {
   Map: undefined;
 };
 
-type NavigationProp = StackNavigationProp<RootStackParamList, "Map">;
+type NavigationProp = NativeStackNavigationProp<RootStackParamList, "Map">;
 const GOOGLE_PLACES_API_KEY = "AlzaSyeyvc8WDVt04Rlv0Gp3BbIGKeOw7grIICd"; // Replace with your API Key
 
 export default function MapScreen() {

@@ -7,8 +7,8 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from "react-native";
-import { useNavigation, useRoute } from "@react-navigation/native";
-import { StackNavigationProp } from "@react-navigation/stack";
+import { useNavigation, useRoute } from "expo-router/react-navigation";
+import { NativeStackNavigationProp } from "expo-router/native-stack";
 import { supabase } from "@/SupabaseConfig";
 
 type RootStackParamList = {
@@ -19,7 +19,7 @@ type RootStackParamList = {
   EditInfo: { from?: string };
   Dashboard: undefined;
 };
-type NavigationProp = StackNavigationProp<RootStackParamList, "EditInfo">;
+type NavigationProp = NativeStackNavigationProp<RootStackParamList, "EditInfo">;
 type RouteProps = {
   key: string;
   name: string;
@@ -92,7 +92,8 @@ function EditInfo() {
     if (navigatedFrom === "profile") {
       navigation.navigate("ProfilePage");
     } else {
-      navigation.navigate("Dashboard");
+      // First save after registering: start fresh so Back can't return to sign-up
+      navigation.reset({ index: 0, routes: [{ name: "Dashboard" }] });
     }
   };
 

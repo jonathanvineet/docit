@@ -1,3 +1,5 @@
+allt
+
 # DocIT - Healthcare Rescue Platform
 
 ## Overview
@@ -7,6 +9,7 @@
 ## Key Features
 
 ### For Patients
+
 - **User Authentication**: Secure login and registration system
 - **Real-time Health Monitoring**: Collect and display vital signs including:
   - Heart rate monitoring
@@ -22,6 +25,7 @@
 - **Location Sharing**: Real-time map integration for emergency responders
 
 ### For Doctors
+
 - **Patient Management Dashboard**: View all connected patients
 - **Patient Search & Connection**: Search and request to connect with patients
 - **Patient Details**: Access comprehensive patient information including:
@@ -49,14 +53,13 @@
    ```bash
    npm install
    ```
-
 2. Start the app
 
    ```bash
     npx expo start
    ```
-
 3. Choose a platform to run on:
+
    - [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
    - [Android emulator](https://docs.expo.dev/workflow/android-emulator/)
    - [Expo Go](https://expo.dev/go) for quick testing

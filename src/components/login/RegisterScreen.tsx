@@ -8,8 +8,8 @@ import {
   TextInput,
   ActivityIndicator,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import { StackNavigationProp } from "@react-navigation/stack";
+import { useNavigation } from "expo-router/react-navigation";
+import { NativeStackNavigationProp } from "expo-router/native-stack";
 import { supabase } from "@/SupabaseConfig";
 
 type RootStackParamList = {
@@ -18,7 +18,7 @@ type RootStackParamList = {
   EditInfo: { from?: string };
 };
 
-type NavigationProp = StackNavigationProp<RootStackParamList, "Register">;
+type NavigationProp = NativeStackNavigationProp<RootStackParamList, "Register">;
 
 const RegisterScreen = () => {
   const navigation = useNavigation<NavigationProp>();

@@ -2,11 +2,12 @@ import React, { useEffect, useState } from "react";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import {
   View, Text, TouchableOpacity, Image, Modal, Pressable,
-  StyleSheet, Alert, ActivityIndicator,
+  StyleSheet, Alert, ActivityIndicator, ScrollView,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import { StackNavigationProp } from "@react-navigation/stack";
+import { useNavigation } from "expo-router/react-navigation";
+import { NativeStackNavigationProp } from "expo-router/native-stack";
 import { supabase } from "@/SupabaseConfig";
+import { showComingSoon } from "@/src/utils/comingSoon";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const profileImg = require("@/assets/images/photo.jpeg");
@@ -16,7 +17,7 @@ type RootStackParamList = {
   DoctorProfile: undefined; EditProfile: { from?: string };
   DoctorDashboard: undefined; ConnectPatient: undefined; Appointments: undefined;
 };
-type NavigationProp = StackNavigationProp<RootStackParamList, "DoctorProfile">;
+type NavigationProp = NativeStackNavigationProp<RootStackParamList, "DoctorProfile">;
 
 const DoctorProfile = () => {
   const navigation = useNavigation<NavigationProp>();
@@ -29,7 +30,7 @@ const DoctorProfile = () => {
   useEffect(() => {
     const checkAndCreateDoctorProfile = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { navigation.replace("Login"); return; }
+      if (!user) { navigation.reset({ index: 0, routes: [{ name: "Home" }] }); return; }
 
       try {
         const cachedName = await AsyncStorage.getItem("doctorName");
@@ -99,7 +100,7 @@ const DoctorProfile = () => {
     try {
       await supabase.auth.signOut();
       await AsyncStorage.clear();
-      navigation.replace("Login");
+      navigation.reset({ index: 0, routes: [{ name: "Home" }] });
     } catch (error: any) {
       Alert.alert("Error", "Failed to sign out: " + error.message);
     }
@@ -107,6 +108,7 @@ const DoctorProfile = () => {
 
   return (
     <View style={{ flex: 1, backgroundColor: "#E6F5F1" }}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 20 }}>
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingTop: 75, marginBottom: 10, paddingHorizontal: 30 }}>
         <TouchableOpacity onPress={() => navigation.navigate("DoctorDashboard")}>
           <FontAwesome name="chevron-left" size={25} />
@@ -131,7 +133,7 @@ const DoctorProfile = () => {
         {[
           { icon: "user-md", label: "Edit Professional Information", onPress: () => navigation.navigate("EditProfile", { from: "profile" }) },
           { icon: "user-plus", label: "Connect with Patients", onPress: () => navigation.navigate("ConnectPatient") },
-          { icon: "calendar", label: "Appointments Calendar", onPress: () => navigation.navigate("Appointments") },
+          { icon: "calendar", label: "Appointments Calendar", onPress: () => showComingSoon("Appointments Calendar") },
         ].map(({ icon, label, onPress }) => (
           <TouchableOpacity key={label} style={{ backgroundColor: "#fff", padding: 15, borderRadius: 10, marginBottom: 15, flexDirection: "row", alignItems: "center" }} onPress={onPress}>
             <FontAwesome name={icon as any} size={20} color="#0F6D66" style={{ marginRight: 12 }} />
@@ -144,6 +146,8 @@ const DoctorProfile = () => {
           <Text style={{ fontSize: 16, color: "#fff", fontWeight: "500" }}>Logout</Text>
         </TouchableOpacity>
       </View>
+
+      </ScrollView>
 
       <View style={styles.bottomNav}>
         {[
@@ -181,7 +185,7 @@ const DoctorProfile = () => {
 export default DoctorProfile;
 
 const styles = StyleSheet.create({
-  bottomNav: { flexDirection: "row", justifyContent: "space-around", alignItems: "center", borderTopWidth: 1, borderTopColor: "#EEEEEE", backgroundColor: "#FFFFFF", height: 60, paddingBottom: 5, position: "absolute", bottom: 0, left: 0, right: 0 },
+  bottomNav: { flexDirection: "row", justifyContent: "space-around", alignItems: "center", borderTopWidth: 1, borderTopColor: "#EEEEEE", backgroundColor: "#FFFFFF", height: 60, paddingBottom: 5 },
   navButton: { alignItems: "center", justifyContent: "center", flex: 1, paddingTop: 10 },
   navText: { fontSize: 12, color: "#999999", marginTop: 4 },
   activeNavText: { fontSize: 12, color: "#0F6D66", fontWeight: "bold", marginTop: 4 },

@@ -6,8 +6,8 @@ import {
   View,
   Text,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import { StackNavigationProp } from "@react-navigation/stack";
+import { useNavigation } from "expo-router/react-navigation";
+import { NativeStackNavigationProp } from "expo-router/native-stack";
 
 type RootStackParamList = {
   Home: undefined;
@@ -21,7 +21,7 @@ type RootStackParamList = {
   Map: undefined;
 };
 
-type NavigationProp = StackNavigationProp<RootStackParamList, "Map">;
+type NavigationProp = NativeStackNavigationProp<RootStackParamList, "Map">;
 
 export default function MapScreen() {
   const navigation = useNavigation<NavigationProp>();

@@ -9,10 +9,12 @@ import {
   Pressable,
   StyleSheet,
   ActivityIndicator,
+  ScrollView,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import { StackNavigationProp } from "@react-navigation/stack";
+import { useNavigation } from "expo-router/react-navigation";
+import { NativeStackNavigationProp } from "expo-router/native-stack";
 import { supabase } from "@/SupabaseConfig";
+import { showComingSoon } from "@/src/utils/comingSoon";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const profileImg = require("@/assets/images/photo.jpeg");
@@ -29,7 +31,10 @@ type RootStackParamList = {
   DiagnosticHistory: undefined;
 };
 
-type NavigationProp = StackNavigationProp<RootStackParamList, "ProfilePage">;
+type NavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "ProfilePage"
+>;
 
 const ProfilePage = () => {
   const navigation = useNavigation<NavigationProp>();
@@ -40,9 +45,11 @@ const ProfilePage = () => {
 
   useEffect(() => {
     const fetchUserData = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
-        navigation.replace("Login");
+        navigation.reset({ index: 0, routes: [{ name: "Home" }] });
         return;
       }
       try {
@@ -92,115 +99,127 @@ const ProfilePage = () => {
 
   return (
     <View style={{ flex: 1, backgroundColor: "#E6F5F1" }}>
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          paddingTop: 75,
-          marginBottom: 10,
-          paddingHorizontal: 30,
-        }}
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingBottom: 20 }}
       >
-        <TouchableOpacity onPress={() => navigation.navigate("Dashboard")}>
-          <FontAwesome name="chevron-left" size={25} />
-        </TouchableOpacity>
-        <Text style={{ fontSize: 22, fontWeight: "bold" }}>Your Profile</Text>
-        <View style={{ width: 20 }} />
-      </View>
-
-      <View
-        style={{
-          alignItems: "center",
-          paddingVertical: 40,
-          backgroundColor: "#0F6D66",
-          borderBottomLeftRadius: 20,
-          borderBottomRightRadius: 20,
-        }}
-      >
-        <Image
-          source={profileImg}
-          style={{ width: 80, height: 80, borderRadius: 40, marginBottom: 10 }}
-        />
-        <Text style={{ fontSize: 20, color: "#fff", fontWeight: "600" }}>
-          {username}
-        </Text>
-      </View>
-
-      <View style={{ marginTop: 30, paddingHorizontal: 20 }}>
-        <TouchableOpacity
+        <View
           style={{
-            backgroundColor: "#fff",
-            padding: 15,
-            borderRadius: 10,
-            marginBottom: 15,
             flexDirection: "row",
             alignItems: "center",
+            justifyContent: "space-between",
+            paddingTop: 75,
+            marginBottom: 10,
+            paddingHorizontal: 30,
           }}
-          onPress={() => navigation.navigate("EditInfo", { from: "profile" })}
         >
-          <Text style={{ fontSize: 16, color: "#333" }}>Edit Information</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={{
-            backgroundColor: "#fff",
-            padding: 15,
-            borderRadius: 10,
-            marginBottom: 15,
-            flexDirection: "row",
-            alignItems: "center",
-          }}
-          onPress={() => navigation.navigate("DoctorMessages")}
-        >
-          <Text style={{ fontSize: 16, color: "#333" }}>Doctor Messages</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={{
-            backgroundColor: "#fff",
-            padding: 15,
-            borderRadius: 10,
-            marginBottom: 15,
-            flexDirection: "row",
-            alignItems: "center",
-          }}
-          onPress={() => navigation.navigate("DiagnosticHistory")}
-        >
-          <Text style={{ fontSize: 16, color: "#333" }}>
-            Diagnostics History
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.logoutContainer}>
-        {loading ? (
-          <ActivityIndicator size="large" color="#0F6D66" />
-        ) : (
-          <TouchableOpacity
-            style={styles.button}
-            onPress={async () => {
-              setLoading(true);
-              try {
-                await supabase.auth.signOut();
-                await AsyncStorage.clear();
-                navigation.replace("Login");
-              } catch (error: any) {
-                alert("Logout failed: " + error.message);
-              } finally {
-                setLoading(false);
-              }
-            }}
-          >
-            <Text style={styles.buttonText}>Logout</Text>
+          <TouchableOpacity onPress={() => navigation.navigate("Dashboard")}>
+            <FontAwesome name="chevron-left" size={25} />
           </TouchableOpacity>
-        )}
-      </View>
+          <Text style={{ fontSize: 22, fontWeight: "bold" }}>Your Profile</Text>
+          <View style={{ width: 20 }} />
+        </View>
+
+        <View
+          style={{
+            alignItems: "center",
+            paddingVertical: 40,
+            backgroundColor: "#0F6D66",
+            borderBottomLeftRadius: 20,
+            borderBottomRightRadius: 20,
+          }}
+        >
+          <Image
+            source={profileImg}
+            style={{
+              width: 80,
+              height: 80,
+              borderRadius: 40,
+              marginBottom: 10,
+            }}
+          />
+          <Text style={{ fontSize: 20, color: "#fff", fontWeight: "600" }}>
+            {username}
+          </Text>
+        </View>
+
+        <View style={{ marginTop: 30, paddingHorizontal: 20 }}>
+          <TouchableOpacity
+            style={{
+              backgroundColor: "#fff",
+              padding: 15,
+              borderRadius: 10,
+              marginBottom: 15,
+              flexDirection: "row",
+              alignItems: "center",
+            }}
+            onPress={() => navigation.navigate("EditInfo", { from: "profile" })}
+          >
+            <Text style={{ fontSize: 16, color: "#333" }}>
+              Edit Information
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={{
+              backgroundColor: "#fff",
+              padding: 15,
+              borderRadius: 10,
+              marginBottom: 15,
+              flexDirection: "row",
+              alignItems: "center",
+            }}
+            onPress={() => navigation.navigate("DoctorMessages")}
+          >
+            <Text style={{ fontSize: 16, color: "#333" }}>Doctor Messages</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={{
+              backgroundColor: "#fff",
+              padding: 15,
+              borderRadius: 10,
+              marginBottom: 15,
+              flexDirection: "row",
+              alignItems: "center",
+            }}
+            onPress={() => navigation.navigate("DiagnosticHistory")}
+          >
+            <Text style={{ fontSize: 16, color: "#333" }}>
+              Diagnostics History
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.logoutContainer}>
+          {loading ? (
+            <ActivityIndicator size="large" color="#0F6D66" />
+          ) : (
+            <TouchableOpacity
+              style={styles.button}
+              onPress={async () => {
+                setLoading(true);
+                try {
+                  await supabase.auth.signOut();
+                  await AsyncStorage.clear();
+                  navigation.reset({ index: 0, routes: [{ name: "Home" }] });
+                } catch (error: any) {
+                  alert("Logout failed: " + error.message);
+                } finally {
+                  setLoading(false);
+                }
+              }}
+            >
+              <Text style={styles.buttonText}>Logout</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </ScrollView>
 
       <View style={styles.bottomNav}>
         <TouchableOpacity
           style={styles.navButton}
-          onPress={() => navigation.navigate("Chatbot")}
+          onPress={() => showComingSoon("Chatbot")}
         >
           <FontAwesome name="comment-o" size={24} color="#999999" />
           <Text style={styles.navText}>Chatbot</Text>
@@ -238,10 +257,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     height: 60,
     paddingBottom: 5,
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
   },
   navButton: {
     alignItems: "center",

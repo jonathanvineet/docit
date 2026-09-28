@@ -4,12 +4,12 @@ import {
   ActivityIndicator, Alert, TextInput, FlatList,
 } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { useNavigation } from "@react-navigation/native";
-import { StackNavigationProp } from "@react-navigation/stack";
+import { useNavigation } from "expo-router/react-navigation";
+import { NativeStackNavigationProp } from "expo-router/native-stack";
 import { supabase } from "@/SupabaseConfig";
 
 type RootStackParamList = { ProfilePage: undefined; DiagnosticHistory: undefined };
-type NavigationProp = StackNavigationProp<RootStackParamList, "DiagnosticHistory">;
+type NavigationProp = NativeStackNavigationProp<RootStackParamList, "DiagnosticHistory">;
 
 const DiagnosticHistory = () => {
   const navigation = useNavigation<NavigationProp>();

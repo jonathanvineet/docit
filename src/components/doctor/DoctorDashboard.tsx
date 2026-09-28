@@ -4,8 +4,8 @@ import {
   StatusBar, ActivityIndicator, FlatList, Alert,
 } from "react-native";
 const { width } = Dimensions.get("window");
-import { useNavigation } from "@react-navigation/native";
-import { StackNavigationProp } from "@react-navigation/stack";
+import { useNavigation } from "expo-router/react-navigation";
+import { NativeStackNavigationProp } from "expo-router/native-stack";
 import { supabase } from "@/SupabaseConfig";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 
@@ -16,7 +16,7 @@ type RootStackParamList = {
   PatientDetails: { patientId: string };
   DoctorProfile: undefined;
 };
-type NavigationProp = StackNavigationProp<RootStackParamList, "DoctorDashboard">;
+type NavigationProp = NativeStackNavigationProp<RootStackParamList, "DoctorDashboard">;
 type Patient = { id: string; name: string; email: string };
 
 const DoctorDashboard = () => {

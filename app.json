@@ -23,7 +23,13 @@
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
-    "plugins": [],
+    "plugins": [
+      "expo-font",
+      "expo-router",
+      "expo-splash-screen",
+      "expo-status-bar",
+      "expo-web-browser"
+    ],
     "extra": {
       "eas": {
         "projectId": "4ce9153e-a08b-4ea7-9ac7-5df735539069"

@@ -8,15 +8,19 @@ import {
   TextInput,
   ActivityIndicator,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import { StackNavigationProp } from "@react-navigation/stack";
+import { useNavigation } from "expo-router/react-navigation";
+import { NativeStackNavigationProp } from "expo-router/native-stack";
 import { supabase } from "@/SupabaseConfig";
 
 type RootStackParamList = {
   Login: undefined;
   DoctorDashboard: undefined;
 };
-type NavigationProp = StackNavigationProp<RootStackParamList, "Login">;
+type NavigationProp = NativeStackNavigationProp<RootStackParamList, "Login">;
+
+// Shared demo account (see Supabase auth users)
+const DEMO_EMAIL = "doctor.test@docit.dev";
+const DEMO_PASSWORD = "Doctor@123";
 
 const DoctorLogin = () => {
   const navigation = useNavigation<NavigationProp>();
@@ -24,12 +28,13 @@ const DoctorLogin = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async () => {
+  const signIn = async (email: string, password: string) => {
     setLoading(true);
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
-      navigation.navigate("DoctorDashboard");
+      // Drop the login screens from history so Back can't return to them
+      navigation.reset({ index: 0, routes: [{ name: "DoctorDashboard" }] });
     } catch (error: any) {
       alert("Signin failed: " + error.message);
     } finally {
@@ -63,9 +68,17 @@ const DoctorLogin = () => {
       {loading ? (
         <ActivityIndicator size="large" color="#0F6D66" />
       ) : (
-        <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-          <Text style={styles.buttonText}>Login</Text>
-        </TouchableOpacity>
+        <>
+          <TouchableOpacity style={styles.button} onPress={() => signIn(email, password)}>
+            <Text style={styles.buttonText}>Login</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.button, styles.demoButton]}
+            onPress={() => signIn(DEMO_EMAIL, DEMO_PASSWORD)}
+          >
+            <Text style={[styles.buttonText, styles.demoButtonText]}>Demo</Text>
+          </TouchableOpacity>
+        </>
       )}
     </View>
   );
@@ -113,6 +126,14 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "bold",
+  },
+  demoButton: {
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#0F6D66",
+  },
+  demoButtonText: {
+    color: "#0F6D66",
   },
 });
 
