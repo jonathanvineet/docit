@@ -1,22 +1,27 @@
 {
   "type": "module",
   "dependencies": {
+    "@anthropic-ai/sdk": "^1.1.0",
     "axios": "^1.4.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^5.1.0",
     "ip": "^1.1.5",
     "mqtt": "^5.10.4",
-    "twilio": "^5.12.2"
+    "twilio": "^5.12.2",
+    "ws": "^8.18.0"
   },
   "name": "backend",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js & node backend.js; wait",
+    "sensors": "node index.js",
+    "alerts": "node backend.js",
+    "simulate": "node simulate.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": ""
+  "description": "ResQmate backend: sensor hub (MQTT/simulator -> WebSocket) and alert/chat server (SOS call+SMS, chatbot)"
 }

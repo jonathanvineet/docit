@@ -1,78 +1,40 @@
 import { FontAwesome } from "@expo/vector-icons";
 import React from "react";
-import {
-  StyleSheet,
-  TouchableOpacity,
-  View,
-  Text,
-} from "react-native";
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useNavigation } from "expo-router/react-navigation";
-import { NativeStackNavigationProp } from "expo-router/native-stack";
+import { useNearbyHospitals } from "./useNearbyHospitals";
+import HospitalList from "./HospitalList";
 
-type RootStackParamList = {
-  Home: undefined;
-  Login: undefined;
-  Register: undefined;
-  Dashboard: undefined;
-  FirstAidList: undefined;
-  FirstAid: { type: string };
-  ProfilePage: undefined;
-  EditInfo: undefined;
-  Map: undefined;
-};
-
-type NavigationProp = NativeStackNavigationProp<RootStackParamList, "Map">;
-
+// react-native-maps has no web support, so web shows the same hospitals as a list
 export default function MapScreen() {
-  const navigation = useNavigation<NavigationProp>();
+  const navigation = useNavigation();
+  const { hospitals, loading, error, reload } = useNearbyHospitals();
 
   return (
     <View style={styles.container}>
-      {/* Header with Back Button */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.navigate("Dashboard")}>
-          <FontAwesome name="chevron-left" size={25} />
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <FontAwesome name="chevron-left" size={22} />
+        </TouchableOpacity>
+        <Text style={styles.title}>Nearby Hospitals</Text>
+        <TouchableOpacity onPress={reload}>
+          <FontAwesome name="refresh" size={20} />
         </TouchableOpacity>
       </View>
-
-      {/* Web Message */}
-      <View style={styles.messageView}>
-        <FontAwesome name="map-marker" size={48} color="#666" />
-        <Text style={styles.messageText}>Maps are not available on web</Text>
-        <Text style={styles.subText}>
-          Please use the mobile app to access map features
-        </Text>
-      </View>
+      {loading ? (
+        <ActivityIndicator size="large" color="#0F6D66" style={{ flex: 1 }} />
+      ) : error ? (
+        <Text style={styles.error}>{error}</Text>
+      ) : (
+        <HospitalList hospitals={hospitals} />
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fff" },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingTop: 75,
-    paddingHorizontal: 20,
-    marginBottom: 10,
-  },
-  messageView: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-  },
-  messageText: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#333",
-    marginTop: 20,
-    textAlign: "center",
-  },
-  subText: {
-    fontSize: 14,
-    color: "#666",
-    marginTop: 10,
-    textAlign: "center",
-  },
+  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingTop: 40, paddingBottom: 12, paddingHorizontal: 20 },
+  title: { fontSize: 18, fontWeight: "bold" },
+  error: { color: "#C62828", textAlign: "center", padding: 20 },
 });

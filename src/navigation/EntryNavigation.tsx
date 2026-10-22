@@ -19,7 +19,7 @@ import EditProfile from "../components/doctor/EditProfile";
 import SOSButton from "../components/dashboard/SOS";
 import DoctorMessages from "../components/profile/DoctorMessages";
 import DiagnosticHistory from "../components/profile/DiagnosticHistory";
-import MedicalHistoryModal from "../components/doctor/MedicalHistoryModal";
+import Chatbot from "../components/chatbot/Chatbot";
 
 const Stack = createNativeStackNavigator();
 
@@ -59,6 +59,7 @@ const EntryNavigation = () => {
         <Stack.Screen name="SOS" component={SOSButton} />
         <Stack.Screen name="DoctorMessages" component={DoctorMessages} />
         <Stack.Screen name="DiagnosticHistory" component={DiagnosticHistory} />
+        <Stack.Screen name="Chatbot" component={Chatbot} />
       </Stack.Navigator>
     </View>
   );

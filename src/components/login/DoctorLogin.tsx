@@ -28,15 +28,56 @@ const DoctorLogin = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const signIn = async (email: string, password: string) => {
+  // Every doctor needs a row in `doctors` (connections, alerts and search depend on it)
+  const ensureDoctorRow = async (doctorEmail: string) => {
+    const { data } = await supabase.from("doctors").select("id").eq("email", doctorEmail).maybeSingle();
+    if (!data) {
+      await supabase.from("doctors").insert({
+        email: doctorEmail, name: "New Doctor", specialty: "General", connected_patients: [],
+      });
+    }
+  };
+
+  const signIn = async (email: string, password: string, isDemo = false) => {
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      let { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      // First run on a fresh Supabase project: create the shared demo doctor
+      if (error && isDemo) {
+        ({ data, error } = await supabase.auth.signUp({ email, password }) as any);
+      }
       if (error) throw error;
+      if (!data.session) {
+        alert("Account created. Confirm the email, or disable email confirmation in Supabase Auth, then log in.");
+        return;
+      }
+      await ensureDoctorRow(email.trim().toLowerCase());
       // Drop the login screens from history so Back can't return to them
       navigation.reset({ index: 0, routes: [{ name: "DoctorDashboard" }] });
     } catch (error: any) {
       alert("Signin failed: " + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const signUp = async () => {
+    if (!email.trim() || password.length < 6) {
+      Alert.alert("Create account", "Enter an email and a password of at least 6 characters.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signUp({ email: email.trim(), password });
+      if (error) throw error;
+      if (!data.session) {
+        alert("Account created. Confirm the email, or disable email confirmation in Supabase Auth, then log in.");
+        return;
+      }
+      await ensureDoctorRow(email.trim().toLowerCase());
+      navigation.reset({ index: 0, routes: [{ name: "DoctorDashboard" }] });
+    } catch (error: any) {
+      alert("Sign up failed: " + error.message);
     } finally {
       setLoading(false);
     }
@@ -74,9 +115,12 @@ const DoctorLogin = () => {
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.button, styles.demoButton]}
-            onPress={() => signIn(DEMO_EMAIL, DEMO_PASSWORD)}
+            onPress={() => signIn(DEMO_EMAIL, DEMO_PASSWORD, true)}
           >
             <Text style={[styles.buttonText, styles.demoButtonText]}>Demo</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={signUp} style={styles.signUpLink}>
+            <Text style={styles.signUpText}>New doctor? Create an account</Text>
           </TouchableOpacity>
         </>
       )}
@@ -85,6 +129,8 @@ const DoctorLogin = () => {
 };
 
 const styles = StyleSheet.create({
+  signUpLink: { marginTop: 16 },
+  signUpText: { color: "#0F6D66", fontWeight: "600" },
   container: {
     flex: 1,
     backgroundColor: "#FFFFFF",

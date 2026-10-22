@@ -19,7 +19,6 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { MaterialIcons } from "@expo/vector-icons";
 import { startSensorDataCollection } from "../../../services/SensorData";
-import { showComingSoon } from "@/src/utils/comingSoon";
 
 type RootStackParamList = {
   Home: undefined;
@@ -58,7 +57,8 @@ const Dashboard = () => {
   });
 
   useEffect(() => {
-    const cleanupSensor = startSensorDataCollection();
+    // Show readings as they arrive; the Supabase realtime row below keeps other devices in sync
+    const cleanupSensor = startSensorDataCollection((reading) => setHealthData(reading));
     const channels: RealtimeChannel[] = [];
     let cancelled = false;
     // supabase.channel() returns an existing channel with the same name, and removal
@@ -241,6 +241,9 @@ const Dashboard = () => {
         <View style={styles.headerContent}>
           <Text style={styles.headerTitle}>Dashboard</Text>
           <View style={styles.headerRight}>
+            <TouchableOpacity onPress={() => navigation.navigate("Map")} style={styles.mapButton}>
+              <FontAwesome name="hospital-o" size={20} color="white" />
+            </TouchableOpacity>
             <TouchableOpacity onPress={() => navigation.navigate("SOS")} style={styles.sosButton}>
               <MaterialIcons name="sos" size={20} color="white" />
             </TouchableOpacity>
@@ -276,7 +279,7 @@ const Dashboard = () => {
       )}
 
       <View style={styles.bottomNav}>
-        <TouchableOpacity style={styles.navButton} onPress={() => showComingSoon("Chatbot")}>
+        <TouchableOpacity style={styles.navButton} onPress={() => navigation.navigate("Chatbot")}>
           <FontAwesome name="comment-o" size={24} color="#999999" />
           <Text style={styles.navText}>Chatbot</Text>
         </TouchableOpacity>
@@ -299,6 +302,7 @@ const styles = StyleSheet.create({
   headerContent: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   headerTitle: { fontSize: 21, fontWeight: "bold", color: "#FFFFFF" },
   headerRight: { flexDirection: "row", alignItems: "center" },
+  mapButton: { width: 40, height: 40, borderRadius: 20, justifyContent: "center", alignItems: "center", marginRight: 10, borderWidth: 1, borderColor: "rgba(255,255,255,0.6)" },
   sosButton: { backgroundColor: "#FF3B30", width: 40, height: 40, borderRadius: 20, justifyContent: "center", alignItems: "center" },
   metricsContainer: { flex: 1, paddingHorizontal: 0 },
   metricCard: { width: "100%", backgroundColor: "#F5F5F5", borderBottomWidth: 1, borderBottomColor: "#E0E0E0", paddingVertical: 20, paddingHorizontal: 20 },

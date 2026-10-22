@@ -14,7 +14,6 @@ import {
 import { useNavigation } from "expo-router/react-navigation";
 import { NativeStackNavigationProp } from "expo-router/native-stack";
 import { supabase } from "@/SupabaseConfig";
-import { showComingSoon } from "@/src/utils/comingSoon";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const profileImg = require("@/assets/images/photo.jpeg");
@@ -219,7 +218,7 @@ const ProfilePage = () => {
       <View style={styles.bottomNav}>
         <TouchableOpacity
           style={styles.navButton}
-          onPress={() => showComingSoon("Chatbot")}
+          onPress={() => navigation.navigate("Chatbot")}
         >
           <FontAwesome name="comment-o" size={24} color="#999999" />
           <Text style={styles.navText}>Chatbot</Text>

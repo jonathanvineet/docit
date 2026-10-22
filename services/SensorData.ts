@@ -1,17 +1,19 @@
-import Constants from "expo-constants";
+import { getSensorWsUrl } from "@/src/utils/backend";
 import { supabase } from "@/SupabaseConfig";
 
 // Determine if a person is in motion based on accelerometer and gyroscope data
-const determineMotionState = (
-  accelerometer: { x: number; y: number; z: number },
-  gyroData: { x: number; y: number; z: number }
-) => {
+type Vector = { x: number | string; y: number | string; z: number | string };
+
+const determineMotionState = (accelerometer: Vector, gyroData: Vector) => {
+  // Readings may arrive as strings (toFixed on the device) — coerce first
+  const a = { x: Number(accelerometer.x), y: Number(accelerometer.y), z: Number(accelerometer.z) };
+  const g = { x: Number(gyroData.x), y: Number(gyroData.y), z: Number(gyroData.z) };
   // Calculate the magnitude of acceleration and angular velocity
   const accelMagnitude = Math.sqrt(
-    accelerometer.x ** 2 + accelerometer.y ** 2 + accelerometer.z ** 2
+    a.x ** 2 + a.y ** 2 + a.z ** 2
   );
   const gyroMagnitude = Math.sqrt(
-    gyroData.x ** 2 + gyroData.y ** 2 + gyroData.z ** 2
+    g.x ** 2 + g.y ** 2 + g.z ** 2
   );
 
   // Define thresholds for motion detection
@@ -37,8 +39,17 @@ const formatDate = (dateString: string) => {
 const MAX_FAILED_ATTEMPTS = 3;
 const BASE_RETRY_DELAY_MS = 5000;
 
-// This function starts collecting sensor data and updating Supabase
-export const startSensorDataCollection = () => {
+export type SensorReading = {
+  heartRate: string;
+  bloodOxygen: string;
+  motionState: string;
+  lastUpdated: string;
+};
+
+// This function starts collecting sensor data and updating Supabase.
+// onReading (optional) receives every accepted reading immediately, so the
+// screen stays live even if the Supabase write or realtime channel fails.
+export const startSensorDataCollection = (onReading?: (reading: SensorReading) => void) => {
   console.log("🔄 Starting sensor data collection service...");
 
   let lastUpdateTime = Date.now();
@@ -67,13 +78,9 @@ export const startSensorDataCollection = () => {
     if (!isActive) return;
 
     try {
-      // Dynamically determine the dev machine IP
-      // @ts-ignore
-      const debuggerHost = Constants.expoConfig?.hostUri || Constants.experienceUrl || Constants.manifest2?.extra?.expoClient?.hostUri || Constants.manifest?.debuggerHost;
-      const devIP = debuggerHost?.split(":")[0] || "192.168.1.44"; // Fallback to current IP if needed
-
-      console.log(`📡 Connecting to sensor server at ws://${devIP}:3000`);
-      wsConnection = new WebSocket(`ws://${devIP}:3000`);
+      const wsUrl = getSensorWsUrl();
+      console.log(`📡 Connecting to sensor server at ${wsUrl}`);
+      wsConnection = new WebSocket(wsUrl);
 
       wsConnection.onopen = () => {
         hasConnected = true;
@@ -97,8 +104,18 @@ export const startSensorDataCollection = () => {
                 const now = new Date();
                 const simpleFormat = formatDate(now.toISOString());
                 const motionState = determineMotionState(data.accelerometer, data.gyroscope);
-                const heartRate = data.pulseoximeter.heartRate;
-                const bloodOxygen = data.pulseoximeter.SpO2;
+                const heartRate = Number(data.pulseoximeter.heartRate);
+                const bloodOxygen = Number(data.pulseoximeter.SpO2);
+                // Finger off the sensor reads as 0 — don't overwrite good data with it
+                if (!Number.isFinite(heartRate) || heartRate <= 0 || !Number.isFinite(bloodOxygen) || bloodOxygen <= 0) {
+                  return;
+                }
+                onReading?.({
+                  heartRate: `${heartRate} BPM`,
+                  bloodOxygen: `${bloodOxygen}%`,
+                  motionState,
+                  lastUpdated: simpleFormat,
+                });
 
                 try {
                   // Ensure user exists in 'users' table to avoid FK constraint error

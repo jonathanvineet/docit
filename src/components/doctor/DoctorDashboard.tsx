@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import {
   View, Text, StyleSheet, TouchableOpacity, Dimensions,
-  StatusBar, ActivityIndicator, FlatList, Alert,
+  StatusBar, ActivityIndicator, FlatList, Alert, Linking,
 } from "react-native";
 const { width } = Dimensions.get("window");
 import { useNavigation } from "expo-router/react-navigation";
@@ -18,12 +18,56 @@ type RootStackParamList = {
 };
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "DoctorDashboard">;
 type Patient = { id: string; name: string; email: string };
+type SosAlert = { id: string; from_email: string; content: string; created_at: string };
+
+const mapLinkIn = (text: string) => text.match(/https:\/\/maps\.google\.com\/\?q=[-\d.,]+/)?.[0];
 
 const DoctorDashboard = () => {
   const navigation = useNavigation<NavigationProp>();
   const [loading, setLoading] = useState(true);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [doctorName, setDoctorName] = useState("");
+  const [alerts, setAlerts] = useState<SosAlert[]>([]);
+
+  // Unread SOS alerts sent by connected patients (see dashboard/SOS.tsx), live via realtime
+  useEffect(() => {
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    let cancelled = false;
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.email || cancelled) return;
+      const { data } = await supabase
+        .from("messages")
+        .select("id, from_email, content, created_at")
+        .eq("to_email", user.email)
+        .eq("to_type", "doctor")
+        .eq("read", false)
+        .order("created_at", { ascending: false });
+      if (!cancelled) setAlerts(data || []);
+      channel = supabase
+        .channel(`doctor-alerts-${Math.random().toString(36).slice(2)}`)
+        .on(
+          "postgres_changes",
+          { event: "INSERT", schema: "public", table: "messages", filter: `to_email=eq.${user.email}` },
+          (payload) => {
+            const msg = payload.new as SosAlert & { to_type: string };
+            if (msg.to_type !== "doctor") return;
+            setAlerts((prev) => [msg, ...prev]);
+            Alert.alert("🚨 Patient SOS", msg.content);
+          }
+        )
+        .subscribe();
+    })();
+    return () => {
+      cancelled = true;
+      if (channel) supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const dismissAlert = async (id: string) => {
+    setAlerts((prev) => prev.filter((a) => a.id !== id));
+    await supabase.from("messages").update({ read: true }).eq("id", id);
+  };
 
   useEffect(() => {
     const fetchPatients = async () => {
@@ -98,6 +142,34 @@ const DoctorDashboard = () => {
         <Text style={styles.connectButtonText}>Connect with Patient</Text>
       </TouchableOpacity>
 
+      {alerts.length > 0 && (
+        <View style={styles.alertBox}>
+          <Text style={styles.alertTitle}>🚨 SOS alerts ({alerts.length})</Text>
+          {alerts.slice(0, 3).map((a) => {
+            const link = mapLinkIn(a.content);
+            return (
+              <View key={a.id} style={styles.alertRow}>
+                <Text style={styles.alertText} numberOfLines={3}>{a.content}</Text>
+                <Text style={styles.alertTime}>{new Date(a.created_at).toLocaleString()}</Text>
+                <View style={styles.alertActions}>
+                  {link && (
+                    <TouchableOpacity onPress={() => Linking.openURL(link)}>
+                      <Text style={styles.alertAction}>Open location</Text>
+                    </TouchableOpacity>
+                  )}
+                  <TouchableOpacity onPress={() => navigation.navigate("PatientDetails", { patientId: a.from_email })}>
+                    <Text style={styles.alertAction}>View patient</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => dismissAlert(a.id)}>
+                    <Text style={styles.alertAction}>Mark handled</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            );
+          })}
+        </View>
+      )}
+
       <View style={styles.patientListContainer}>
         <Text style={styles.sectionTitle}>Your Patients</Text>
         {loading ? (
@@ -143,6 +215,13 @@ const styles = StyleSheet.create({
   connectButton: { flexDirection: "row", alignItems: "center", justifyContent: "center", backgroundColor: "#0F6D66", paddingVertical: 12, marginHorizontal: 20, marginTop: 15, borderRadius: 8 },
   connectIcon: { marginRight: 8 },
   connectButtonText: { color: "#FFFFFF", fontSize: 16, fontWeight: "bold" },
+  alertBox: { backgroundColor: "#FFEBEE", borderColor: "#C62828", borderWidth: 1, borderRadius: 10, marginHorizontal: 20, marginTop: 15, padding: 12 },
+  alertTitle: { color: "#C62828", fontWeight: "bold", fontSize: 16, marginBottom: 6 },
+  alertRow: { borderTopWidth: 1, borderTopColor: "#F8BBD0", paddingVertical: 8 },
+  alertText: { color: "#333", fontSize: 13 },
+  alertTime: { color: "#888", fontSize: 11, marginTop: 2 },
+  alertActions: { flexDirection: "row", gap: 16, marginTop: 6 },
+  alertAction: { color: "#C62828", fontWeight: "bold", fontSize: 13 },
   patientListContainer: { flex: 1, paddingHorizontal: 20, paddingTop: 20 },
   sectionTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 15, color: "#333333" },
   patientList: { paddingBottom: 20 },
