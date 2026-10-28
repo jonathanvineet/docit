@@ -1,7 +1,5 @@
-import { Text, View } from "react-native";
-import EntryNavigation from "../src/navigation/EntryNavigation";
+import { Redirect } from "expo-router";
 
 export default function Index() {
-  return <EntryNavigation />;
+  return <Redirect href="/Home" />;
 }
-
