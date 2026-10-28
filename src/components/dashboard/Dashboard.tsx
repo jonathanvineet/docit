@@ -234,7 +234,7 @@ const Dashboard = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar backgroundColor="#0F6D66" barStyle="light-content" />
+      <StatusBar barStyle="light-content" />
       {renderConnectionRequestModal()}
 
       <View style={styles.header}>

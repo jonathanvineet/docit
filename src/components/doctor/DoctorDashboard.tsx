@@ -130,7 +130,7 @@ const DoctorDashboard = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar backgroundColor="#0F6D66" barStyle="light-content" />
+      <StatusBar barStyle="light-content" />
       <View style={styles.header}>
         <Text style={styles.headerTitle}>
           {doctorName ? `Dr. ${doctorName}'s Dashboard` : "Doctor Dashboard"}

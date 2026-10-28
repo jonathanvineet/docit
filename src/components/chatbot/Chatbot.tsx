@@ -138,7 +138,7 @@ const Chatbot = () => {
         renderItem={renderItem}
         contentContainerStyle={styles.list}
         onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
-        ListFooterComponent={sending ? <ActivityIndicator color="#0F6D66" style={{ marginTop: 8 }} /> : null}
+        ListFooterComponent={sending ? <ActivityIndicator color="#0F6D66" style={{ marginTop: 8 }} /> : undefined}
       />
 
       {messages.length <= 1 && (
