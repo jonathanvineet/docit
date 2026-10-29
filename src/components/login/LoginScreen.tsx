@@ -11,6 +11,7 @@ import {
 import { useNavigation } from "expo-router/react-navigation";
 import { NativeStackNavigationProp } from "expo-router/native-stack";
 import { supabase } from "@/SupabaseConfig";
+import { resetTo } from "@/src/utils/navigation";
 
 type RootStackParamList = {
   Login: undefined;
@@ -36,7 +37,7 @@ const LoginScreen = () => {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
       // Drop the login screens from history so Back can't return to them
-      navigation.reset({ index: 0, routes: [{ name: "Dashboard" }] });
+      resetTo("/Dashboard");
     } catch (error: any) {
       alert("Signin failed: " + error.message);
     } finally {

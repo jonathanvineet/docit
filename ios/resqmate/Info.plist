@@ -45,6 +45,10 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<key>NSHealthShareUsageDescription</key>
+	<string>ResQmate reads your heart rate, blood oxygen and steps from Apple Health to show your vitals and share them with your connected doctor.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>ResQmate does not write data to Apple Health.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>Allow $(PRODUCT_NAME) to access your location</string>
 	<key>NSLocationAlwaysUsageDescription</key>

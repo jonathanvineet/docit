@@ -20,12 +20,12 @@ A React Native (Expo) app plus a wearable sensor rig. It streams a patient's hea
 | Find care fast | **Nearby hospitals**: map plus distance-sorted list with directions (OpenStreetMap, no API key needed) |
 | Doctor in the loop | Doctors search for patients and send connection requests. They see live vitals, history and SOS alerts in real time, and can message patients |
 | Medical records | Patients log diagnoses, medication and the treating doctor. Connected doctors can view them |
-| Quick answers | First-aid **chatbot**: Claude when a key is configured, otherwise a built-in offline first-aid guide |
+| Quick answers | First-aid **chatbot**: Gemini when a key is configured, otherwise a built-in offline first-aid guide |
 
 Everything works without paid services:
 - **Without Twilio**, calls and SMS are simulated and logged.
 - **Without the wearable or MQTT**, the backend generates realistic sensor readings.
-- **Without a Claude key**, the chatbot uses the offline guide.
+- **Without a Gemini key**, the chatbot uses the offline guide.
 
 ---
 
@@ -38,7 +38,7 @@ Create a Supabase project. Open the **SQL editor** and run `supabase/schema.sql`
 ```bash
 cd backend
 npm install
-cp .env.example .env      # optional: Twilio, MQTT, ANTHROPIC_API_KEY
+cp .env.example .env      # optional: Twilio, MQTT, GEMINI_API_KEY
 npm start                 # sensor hub :3000 (WebSocket) + alert/chat server :3001
 ```
 Check that it is up: `curl localhost:3001/health` and `curl localhost:3000/health`.
@@ -115,7 +115,7 @@ Likely viva questions:
 - `src/components/doctor/`: doctor dashboard (patients and SOS inbox), patient details, connect, profile
 - `src/components/profile/`: patient profile, history, doctor messages
 - `src/components/location/`: nearby hospitals (native map; list on web)
-- `src/components/chatbot/`: first-aid chatbot (Claude or offline)
+- `src/components/chatbot/`: first-aid chatbot (Gemini or offline)
 - `services/SensorData.ts`: WebSocket sensor client, motion classification, Supabase upsert
 - `backend/index.js`: sensor hub (MQTT or simulator → WebSocket)
 - `backend/backend.js`: alert server (`/sos`, `/call`, `/sms`, `/alerts`, `/chat`, `/health`)

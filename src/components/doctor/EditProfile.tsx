@@ -13,6 +13,7 @@ import {
 import { useNavigation, useRoute, RouteProp } from "expo-router/react-navigation";
 import { NativeStackNavigationProp } from "expo-router/native-stack";
 import { supabase } from "@/SupabaseConfig";
+import { resetTo } from "@/src/utils/navigation";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 type RootStackParamList = {
@@ -47,7 +48,7 @@ const EditProfile = () => {
     const fetchDoctorInfo = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        navigation.reset({ index: 0, routes: [{ name: "Home" }] });
+        resetTo("/Home");
         return;
       }
 
@@ -116,7 +117,7 @@ const EditProfile = () => {
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      navigation.reset({ index: 0, routes: [{ name: "Home" }] });
+      resetTo("/Home");
       return;
     }
 

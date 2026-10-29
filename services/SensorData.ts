@@ -29,7 +29,7 @@ const determineMotionState = (accelerometer: Vector, gyroData: Vector) => {
 };
 
 // Format date to a simpler format
-const formatDate = (dateString: string) => {
+export const formatDate = (dateString: string) => {
   const date = new Date(dateString);
   return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
 };
@@ -46,10 +46,48 @@ export type SensorReading = {
   lastUpdated: string;
 };
 
+// Store a reading as the patient's current row in health_data, which the
+// dashboard and the doctor's PatientDetails screen subscribe to
+export const saveHealthReading = async (email: string, reading: SensorReading, rawData: object) => {
+  try {
+    // Ensure user exists in 'users' table to avoid FK constraint error
+    const { data: userData, error: userError } = await supabase
+      .from("users")
+      .select("email")
+      .eq("email", email)
+      .single();
+
+    if (userError || !userData) {
+      console.log("⚠️ User not found in 'users' table, creating stub...");
+      await supabase.from("users").insert({ email, name: "New Patient" });
+    }
+
+    const { error } = await supabase
+      .from("health_data")
+      .upsert({
+        patient_email: email,
+        heart_rate: reading.heartRate,
+        blood_oxygen: reading.bloodOxygen,
+        motion_state: reading.motionState,
+        last_updated: reading.lastUpdated,
+        raw_data: rawData,
+      }, { onConflict: 'patient_email' });
+
+    if (error) throw error;
+    console.log(`✅ Health data updated in Supabase: HR=${reading.heartRate}, SpO2=${reading.bloodOxygen}, Motion=${reading.motionState}`);
+  } catch (error) {
+    console.error("❌ Error updating health data:", error);
+  }
+};
+
 // This function starts collecting sensor data and updating Supabase.
 // onReading (optional) receives every accepted reading immediately, so the
 // screen stays live even if the Supabase write or realtime channel fails.
-export const startSensorDataCollection = (onReading?: (reading: SensorReading) => void) => {
+// onUnavailable (optional) is called once if the sensor server can't be reached.
+export const startSensorDataCollection = (
+  onReading?: (reading: SensorReading) => void,
+  onUnavailable?: () => void,
+) => {
   console.log("🔄 Starting sensor data collection service...");
 
   let lastUpdateTime = Date.now();
@@ -66,6 +104,7 @@ export const startSensorDataCollection = (onReading?: (reading: SensorReading) =
       failedAttempts += 1;
       if (failedAttempts >= MAX_FAILED_ATTEMPTS) {
         console.log("ℹ️ Sensor server unavailable, live sensor data disabled");
+        onUnavailable?.();
         return;
       }
     }
@@ -110,46 +149,19 @@ export const startSensorDataCollection = (onReading?: (reading: SensorReading) =
                 if (!Number.isFinite(heartRate) || heartRate <= 0 || !Number.isFinite(bloodOxygen) || bloodOxygen <= 0) {
                   return;
                 }
-                onReading?.({
+                const reading: SensorReading = {
                   heartRate: `${heartRate} BPM`,
                   bloodOxygen: `${bloodOxygen}%`,
                   motionState,
                   lastUpdated: simpleFormat,
+                };
+                onReading?.(reading);
+
+                await saveHealthReading(user.email, reading, {
+                  gyroscope: data.gyroscope,
+                  accelerometer: data.accelerometer,
+                  pulseoximeter: data.pulseoximeter
                 });
-
-                try {
-                  // Ensure user exists in 'users' table to avoid FK constraint error
-                  const { data: userData, error: userError } = await supabase
-                    .from("users")
-                    .select("email")
-                    .eq("email", user.email)
-                    .single();
-
-                  if (userError || !userData) {
-                    console.log("⚠️ User not found in 'users' table, creating stub...");
-                    await supabase.from("users").insert({ email: user.email, name: "New Patient" });
-                  }
-
-                  const { error } = await supabase
-                    .from("health_data")
-                    .upsert({
-                      patient_email: user.email,
-                      heart_rate: `${heartRate} BPM`,
-                      blood_oxygen: `${bloodOxygen}%`,
-                      motion_state: motionState,
-                      last_updated: simpleFormat,
-                      raw_data: {
-                        gyroscope: data.gyroscope,
-                        accelerometer: data.accelerometer,
-                        pulseoximeter: data.pulseoximeter
-                      }
-                    }, { onConflict: 'patient_email' });
-
-                  if (error) throw error;
-                  console.log(`✅ Health data updated in Supabase: HR=${heartRate}, SpO2=${bloodOxygen}, Motion=${motionState}`);
-                } catch (error) {
-                  console.error("❌ Error updating health data:", error);
-                }
               } else {
                 console.log("❌ No current user found or missing email");
               }

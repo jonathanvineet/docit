@@ -11,6 +11,7 @@ import {
 import { useNavigation } from "expo-router/react-navigation";
 import { NativeStackNavigationProp } from "expo-router/native-stack";
 import { supabase } from "@/SupabaseConfig";
+import { resetTo } from "@/src/utils/navigation";
 
 type RootStackParamList = {
   Login: undefined;
@@ -53,7 +54,7 @@ const DoctorLogin = () => {
       }
       await ensureDoctorRow(email.trim().toLowerCase());
       // Drop the login screens from history so Back can't return to them
-      navigation.reset({ index: 0, routes: [{ name: "DoctorDashboard" }] });
+      resetTo("/DoctorDashboard");
     } catch (error: any) {
       alert("Signin failed: " + error.message);
     } finally {
@@ -75,7 +76,7 @@ const DoctorLogin = () => {
         return;
       }
       await ensureDoctorRow(email.trim().toLowerCase());
-      navigation.reset({ index: 0, routes: [{ name: "DoctorDashboard" }] });
+      resetTo("/DoctorDashboard");
     } catch (error: any) {
       alert("Sign up failed: " + error.message);
     } finally {

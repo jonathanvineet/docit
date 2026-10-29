@@ -120,7 +120,7 @@ app.get("/health", (req, res) => {
     twilio: twilioReady ? "live" : "simulated",
     callTargets: CALL_TO.length,
     smsTargets: SMS_TO.length,
-    chatbot: process.env.ANTHROPIC_API_KEY ? "claude" : "offline",
+    chatbot: process.env.GEMINI_API_KEY ? "gemini" : "offline",
   });
 });
 
@@ -188,7 +188,7 @@ app.get("/alerts", (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
-// Chatbot: Claude when ANTHROPIC_API_KEY is set, otherwise 503 so the app
+// Chatbot: Gemini when GEMINI_API_KEY is set, otherwise 503 so the app
 // falls back to its built-in offline first-aid guide.
 // ---------------------------------------------------------------------------
 const CHAT_SYSTEM = `You are ResQmate Assistant inside a patient health-monitoring app.
@@ -197,14 +197,16 @@ You are not a doctor: never diagnose or prescribe. For anything that could be an
 (chest pain, breathing difficulty, stroke signs, severe bleeding, unconsciousness, suicidal thoughts)
 tell the user to press the SOS button in the app and call 108/112 immediately.`;
 
-let anthropicClient = null;
-async function getAnthropic() {
-  if (!process.env.ANTHROPIC_API_KEY) return null;
-  if (!anthropicClient) {
-    const { default: Anthropic } = await import("@anthropic-ai/sdk");
-    anthropicClient = new Anthropic();
+const BLOCKED_REPLY = "I can't help with that here. If this is an emergency, press SOS or call 108/112.";
+
+let geminiClient = null;
+async function getGemini() {
+  if (!process.env.GEMINI_API_KEY) return null;
+  if (!geminiClient) {
+    const { GoogleGenAI } = await import("@google/genai");
+    geminiClient = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
   }
-  return anthropicClient;
+  return geminiClient;
 }
 
 app.post("/chat", async (req, res) => {
@@ -219,24 +221,23 @@ app.post("/chat", async (req, res) => {
   // The API requires the conversation to start with a user turn
   while (messages.length && messages[0].role !== "user") messages.shift();
 
-  const anthropic = await getAnthropic();
-  if (!anthropic) return res.status(503).json({ error: "Chatbot model not configured", source: "none" });
+  const gemini = await getGemini();
+  if (!gemini) return res.status(503).json({ error: "Chatbot model not configured", source: "none" });
 
   try {
-    const response = await anthropic.beta.messages.create({
-      model: process.env.CHAT_MODEL || "claude-opus-5-5",
-      max_tokens: 1024,
-      system: CHAT_SYSTEM,
-      output_config: { effort: "low" },
-      betas: ["server-side-fallback-2026-07-01"],
-      fallbacks: "default",
-      messages,
+    const response = await gemini.models.generateContent({
+      model: process.env.CHAT_MODEL || "gemini-2.5-flash",
+      // Gemini calls the assistant role "model"
+      contents: messages.map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] })),
+      config: { systemInstruction: CHAT_SYSTEM, maxOutputTokens: 1024 },
     });
-    if (response.stop_reason === "refusal") {
-      return res.json({ reply: "I can't help with that here. If this is an emergency, press SOS or call 108/112.", source: "claude" });
+    const finishReason = response.candidates?.[0]?.finishReason;
+    if (response.promptFeedback?.blockReason || finishReason === "SAFETY" || finishReason === "PROHIBITED_CONTENT") {
+      return res.json({ reply: BLOCKED_REPLY, source: "gemini" });
     }
-    const reply = response.content.filter((b) => b.type === "text").map((b) => b.text).join("\n").trim();
-    res.json({ reply, source: "claude" });
+    const reply = (response.text || "").trim();
+    if (!reply) throw new Error(`Empty reply (finishReason=${finishReason})`);
+    res.json({ reply, source: "gemini" });
   } catch (error) {
     console.error("Chat error:", error.message);
     res.status(502).json({ error: "Chatbot request failed", source: "none" });
@@ -246,7 +247,7 @@ app.post("/chat", async (req, res) => {
 const server = app.listen(PORT, () => {
   console.log(`Alert server running at http://${ip.address()}:${PORT}`);
   console.log(`  Twilio: ${twilioReady ? "live" : "SIMULATED (set TWILIO_* in backend/.env)"}`);
-  console.log(`  Chatbot: ${process.env.ANTHROPIC_API_KEY ? "Claude" : "offline fallback (app-side)"}`);
+  console.log(`  Chatbot: ${process.env.GEMINI_API_KEY ? "Gemini" : "offline fallback (app-side)"}`);
 });
 server.on("error", (err) => {
   if (err.code === "EADDRINUSE") {

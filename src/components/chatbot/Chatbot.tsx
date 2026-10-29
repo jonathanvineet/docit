@@ -17,7 +17,7 @@ type ChatMessage = {
   id: string;
   role: "user" | "assistant";
   content: string;
-  source?: "claude" | "offline";
+  source?: "ai" | "offline";
   createdAt: string;
 };
 
@@ -56,7 +56,7 @@ const Chatbot = () => {
   };
 
   // Claude via the backend when configured; otherwise the offline guide
-  const askAssistant = async (history: ChatMessage[]): Promise<{ reply: string; source: "claude" | "offline" }> => {
+  const askAssistant = async (history: ChatMessage[]): Promise<{ reply: string; source: "ai" | "offline" }> => {
     const question = history[history.length - 1].content;
     try {
       const res = await fetchWithTimeout(
@@ -72,7 +72,7 @@ const Chatbot = () => {
       );
       if (res.ok) {
         const data = await res.json();
-        if (data.reply) return { reply: data.reply, source: "claude" };
+        if (data.reply) return { reply: data.reply, source: "ai" };
       }
     } catch {
       // backend unreachable — fall through to offline answer
@@ -112,7 +112,7 @@ const Chatbot = () => {
         <View style={[styles.bubble, mine ? styles.userBubble : styles.botBubble]}>
           <Text style={[styles.bubbleText, mine && styles.userText]}>{item.content}</Text>
           {!mine && item.id !== "welcome" && (
-            <Text style={styles.sourceTag}>{item.source === "claude" ? "AI assistant" : "Offline first-aid guide"}</Text>
+            <Text style={styles.sourceTag}>{item.source === "ai" ? "AI assistant" : "Offline first-aid guide"}</Text>
           )}
         </View>
       </View>

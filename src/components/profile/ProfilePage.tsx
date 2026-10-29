@@ -14,6 +14,7 @@ import {
 import { useNavigation } from "expo-router/react-navigation";
 import { NativeStackNavigationProp } from "expo-router/native-stack";
 import { supabase } from "@/SupabaseConfig";
+import { resetTo } from "@/src/utils/navigation";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const profileImg = require("@/assets/images/photo.jpeg");
@@ -48,7 +49,7 @@ const ProfilePage = () => {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) {
-        navigation.reset({ index: 0, routes: [{ name: "Home" }] });
+        resetTo("/Home");
         return;
       }
       try {
@@ -201,7 +202,7 @@ const ProfilePage = () => {
                 try {
                   await supabase.auth.signOut();
                   await AsyncStorage.clear();
-                  navigation.reset({ index: 0, routes: [{ name: "Home" }] });
+                  resetTo("/Home");
                 } catch (error: any) {
                   alert("Logout failed: " + error.message);
                 } finally {

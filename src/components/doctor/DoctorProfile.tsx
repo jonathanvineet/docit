@@ -7,6 +7,7 @@ import {
 import { useNavigation } from "expo-router/react-navigation";
 import { NativeStackNavigationProp } from "expo-router/native-stack";
 import { supabase } from "@/SupabaseConfig";
+import { resetTo } from "@/src/utils/navigation";
 import { showComingSoon } from "@/src/utils/comingSoon";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -30,7 +31,7 @@ const DoctorProfile = () => {
   useEffect(() => {
     const checkAndCreateDoctorProfile = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { navigation.reset({ index: 0, routes: [{ name: "Home" }] }); return; }
+      if (!user) { resetTo("/Home"); return; }
 
       try {
         const cachedName = await AsyncStorage.getItem("doctorName");
@@ -100,7 +101,7 @@ const DoctorProfile = () => {
     try {
       await supabase.auth.signOut();
       await AsyncStorage.clear();
-      navigation.reset({ index: 0, routes: [{ name: "Home" }] });
+      resetTo("/Home");
     } catch (error: any) {
       Alert.alert("Error", "Failed to sign out: " + error.message);
     }

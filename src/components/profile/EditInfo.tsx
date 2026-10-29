@@ -10,6 +10,7 @@ import {
 import { useNavigation, useRoute } from "expo-router/react-navigation";
 import { NativeStackNavigationProp } from "expo-router/native-stack";
 import { supabase } from "@/SupabaseConfig";
+import { resetTo } from "@/src/utils/navigation";
 
 type RootStackParamList = {
   Home: undefined;
@@ -93,7 +94,7 @@ function EditInfo() {
       navigation.navigate("ProfilePage");
     } else {
       // First save after registering: start fresh so Back can't return to sign-up
-      navigation.reset({ index: 0, routes: [{ name: "Dashboard" }] });
+      resetTo("/Dashboard");
     }
   };
 
