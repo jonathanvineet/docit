@@ -21,21 +21,24 @@ const VITALS_LOOKBACK_MS = 24 * 60 * 60 * 1000;
 const MOTION_WINDOW_MS = 10 * 60 * 1000;
 
 // Reads the newest heart rate / SpO2 / steps from the phone's health store
-// and saves them to Supabase like a sensor reading. Used when the sensor
-// server isn't reachable.
+// and saves them to Supabase so the connected doctor sees them too.
 export const startPhoneHealthSync = (onReading?: (reading: SensorReading) => void) => {
   let isActive = true;
   let timer: ReturnType<typeof setInterval> | null = null;
   let lastSavedAt: number | null = null;
+  const noData: SensorReading = { heartRate: "No data", bloodOxygen: "No data", motionState: "No data", lastUpdated: "" };
+  // Tell the screen there's nothing to show instead of leaving it on "Loading..."
+  const reportNoData = () => { if (isActive && lastSavedAt === null) onReading?.(noData); };
   const platform = loadHealthPlatform();
-  if (!platform) return () => {};
+  if (!platform) { reportNoData(); return () => {}; }
   const { readLatestVitals, requestHealthAccess } = platform;
 
   const poll = async () => {
     try {
       const now = Date.now();
       const vitals = await readLatestVitals(new Date(now - VITALS_LOOKBACK_MS), new Date(now - MOTION_WINDOW_MS));
-      if (!isActive || !vitals.measuredAt) return;
+      if (!isActive) return;
+      if (!vitals.measuredAt) { reportNoData(); return; }
       // Nothing new since the last poll
       if (vitals.measuredAt.getTime() === lastSavedAt) return;
 
@@ -58,9 +61,11 @@ export const startPhoneHealthSync = (onReading?: (reading: SensorReading) => voi
 
   (async () => {
     try {
-      if (!(await requestHealthAccess()) || !isActive) return;
+      if (!(await requestHealthAccess())) { reportNoData(); return; }
+      if (!isActive) return;
     } catch (error) {
       console.log("⚠️ Health data permission request failed:", error);
+      reportNoData();
       return;
     }
     console.log("📱 Reading vitals from the phone's health data");

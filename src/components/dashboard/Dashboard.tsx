@@ -18,7 +18,6 @@ import { supabase } from "@/SupabaseConfig";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { MaterialIcons } from "@expo/vector-icons";
-import { startSensorDataCollection } from "../../../services/SensorData";
 import { startPhoneHealthSync } from "../../../services/PhoneHealthData";
 
 type RootStackParamList = {
@@ -58,13 +57,9 @@ const Dashboard = () => {
   });
 
   useEffect(() => {
-    // Show readings as they arrive; the Supabase realtime row below keeps other devices in sync
-    // Without the sensor server, fall back to the phone's Apple Health / Health Connect data
-    let cleanupPhoneHealth: (() => void) | null = null;
-    const cleanupSensor = startSensorDataCollection(
-      (reading) => setHealthData(reading),
-      () => { cleanupPhoneHealth = startPhoneHealthSync((reading) => setHealthData(reading)); },
-    );
+    // Vitals come from this phone's Apple Health / Health Connect data; the Supabase
+    // realtime row below keeps the doctor's screen and other devices in sync
+    const cleanupPhoneHealth = startPhoneHealthSync((reading) => setHealthData(reading));
     const channels: RealtimeChannel[] = [];
     let cancelled = false;
     // supabase.channel() returns an existing channel with the same name, and removal
@@ -150,8 +145,7 @@ const Dashboard = () => {
     setupSubscriptions();
     return () => {
       cancelled = true;
-      cleanupSensor();
-      cleanupPhoneHealth?.();
+      cleanupPhoneHealth();
       channels.forEach((channel) => supabase.removeChannel(channel));
     };
   }, []);

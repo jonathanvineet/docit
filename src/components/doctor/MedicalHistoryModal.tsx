@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  ScrollView,
 } from "react-native";
 import { supabase } from "@/SupabaseConfig";
 
@@ -81,22 +82,22 @@ const MedicalHistoryModal = ({
           {loading ? (
             <ActivityIndicator size="large" color="#0F6D66" style={{ marginVertical: 20 }} />
           ) : (
-            <View style={{ flex: 1 }}>
+            <ScrollView style={{ flexShrink: 1 }}>
               {historyData.length > 0 ? (
                 historyData.map((item) => (
                   <View key={item.id} style={styles.historyItem}>
                     <Text style={styles.historyItemheader}>
-                      {item.doctor} - {item.date || new Date(item.created_at).toLocaleDateString()}
+                      {item.doctor ? `${item.doctor} - ` : ""}{item.date || new Date(item.created_at).toLocaleDateString()}
                     </Text>
-                    <Text style={styles.historyItemTitle}>Problem: {item.title}</Text>
-                    <Text style={styles.historyItemTitle}>Description: {item.description}</Text>
-                    <Text style={styles.historyItemTitle}>Prescription: {item.medication}</Text>
+                    <Text style={styles.historyItemTitle}>Problem: {item.title || "—"}</Text>
+                    {item.description ? <Text style={styles.historyItemTitle}>Description: {item.description}</Text> : null}
+                    {item.medication ? <Text style={styles.historyItemTitle}>Prescription: {item.medication}</Text> : null}
                   </View>
                 ))
               ) : (
                 <Text style={styles.emptyMessage}>No medical history found for this patient.</Text>
               )}
-            </View>
+            </ScrollView>
           )}
 
           <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
